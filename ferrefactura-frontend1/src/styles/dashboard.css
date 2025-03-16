@@ -1,0 +1,42 @@
+/* src/styles/dashboard.css */
+.dashboard-container {
+    text-align: center;
+    padding: 40px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .dashboard-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  
+  .btn-primary, .btn-danger {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+  }
+  
+  .btn-primary {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
+  .btn-danger {
+    background-color: #dc3545;
+    color: white;
+    margin-top: 20px;
+  }
+  
+  .btn-danger:hover {
+    background-color: #b52a3b;
+  }
+  

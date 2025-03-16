@@ -1,0 +1,44 @@
+/* src/styles/login.css */
+.login-container {
+    text-align: center;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 40px;
+    background: #333;
+    border-radius: 10px;
+  }
+  
+  h2 {
+    color: white;
+  }
+  
+  .error-text {
+    color: red;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  input {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+  }
+  
+  .btn-login {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .btn-login:hover {
+    background-color: #0056b3;
+  }
+  
