@@ -1,44 +1,85 @@
-/* src/styles/login.css */
+/* 🔹 Fondo oscuro con imagen de la ferretería SOLO en el login */
+.login-page {
+  background: url("/ferreteria.png") no-repeat center center fixed;
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  position: relative;
+}
+
+/* 🔹 Desenfoque en la imagen de fondo para mejor legibilidad */
+.login-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Oscurecer el fondo */
+  backdrop-filter: blur(8px); /* Desenfoque */
+  z-index: 0;
+}
+
+/* 🔹 Contenedor del login */
 .login-container {
-    text-align: center;
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 40px;
-    background: #333;
-    border-radius: 10px;
-  }
-  
-  h2 {
-    color: white;
-  }
-  
-  .error-text {
-    color: red;
-  }
-  
-  .login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  input {
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-  }
-  
-  .btn-login {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .btn-login:hover {
-    background-color: #0056b3;
-  }
-  
+  position: relative;
+  text-align: center;
+  max-width: 400px;
+  padding: 40px;
+  background: rgba(15, 15, 15, 0.9); /* Fondo dark semi-transparente */
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+/* 🔹 Estilos del formulario */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* 🔹 Inputs oscuros con diseño elegante */
+input {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+/* 🔹 Efecto al hacer focus en los inputs */
+input:focus {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* 🔹 Botón de iniciar sesión */
+.btn-login {
+  background: linear-gradient(135deg, #2563eb, #1e3a8a);
+  color: white;
+  font-weight: bold;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.5);
+}
+
+/* 🔹 Efecto hover en el botón */
+.btn-login:hover {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  transform: translateY(-2px);
+}
+
+/* 🔹 Desaparece la imagen de fondo cuando el usuario inicia sesión */
+body:not(.login-page) {
+  background: #121212; /* Mantiene dark mode en las demás páginas */
+}
