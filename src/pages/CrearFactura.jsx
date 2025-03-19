@@ -15,25 +15,35 @@ function CrearFactura() {
   const [costoEnvio, setCostoEnvio] = useState(0);
   const [descuentoTotal, setDescuentoTotal] = useState(0);
   const [totalFactura, setTotalFactura] = useState(0);
-  const [loading, setLoading] = useState(true);
+
+  const [loadingProductos, setLoadingProductos] = useState(true); // Para mostrar "Cargando..."
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false); // Evita doble clic en "Confirmar"
 
   // Estado para la búsqueda
   const [busqueda, setBusqueda] = useState("");
 
   // Para redirigir tras crear la factura
   const navigate = useNavigate();
-
   const token = localStorage.getItem("token");
 
   // Cargar productos desde el backend
   useEffect(() => {
     const fetchProductos = async () => {
+      setLoadingProductos(true);
+      setError(""); // Limpiamos cualquier error previo
       try {
         const response = await fetch(`${API_URL}/productos/`, {
           headers: { Authorization: `Token ${token}` },
         });
-        if (!response.ok) throw new Error("No autorizado");
+        if (!response.ok) {
+          // Podría ser 401 (No autorizado) u otro error
+          if (response.status === 401) {
+            throw new Error("No autorizado. Verifica tu sesión.");
+          } else {
+            throw new Error("Error al obtener los productos.");
+          }
+        }
         const data = await response.json();
 
         const productosProcesados = data.map((producto) => {
@@ -53,16 +63,16 @@ function CrearFactura() {
               : null,
             stockQuintales,
             unidadesRestantes,
-            // Valor por si se aplica descuento unitario
-            descuentoPorUnidad: 0,
+            descuentoPorUnidad: 0, // Valor inicial
           };
         });
 
         setProductos(productosProcesados);
-      } catch {
-        setError("Error al obtener los productos");
+      } catch (error) {
+        console.error(error);
+        setError(error.message || "Error al obtener los productos.");
       } finally {
-        setLoading(false);
+        setLoadingProductos(false);
       }
     };
     fetchProductos();
@@ -92,12 +102,12 @@ function CrearFactura() {
     calcularTotal();
   }, [productosSeleccionados, costoEnvio, descuentoTotal, calcularTotal]);
 
-  // Quitar producto de seleccionados
+  // Quitar producto de los seleccionados
   const quitarProducto = (id) => {
     setProductosSeleccionados((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Modificar cantidad/quintal
+  // Modificar la cantidad (quintales o unidades)
   const modificarCantidad = (id, campo, valor) => {
     setProductosSeleccionados((prev) =>
       prev.map((p) => {
@@ -105,7 +115,20 @@ function CrearFactura() {
           let nuevoValor = parseFloat(valor) || 0;
           if (nuevoValor < 0) return p;
 
-          // Calcular total de unidades que se van a consumir
+          // Si este producto maneja quintales y el usuario intenta poner en
+          // "cantidadUnidades" un valor >= a las unidades que equivalen a un quintal...
+          if (
+            campo === "cantidadUnidades" &&
+            p.precio_quintal !== null &&
+            p.unidades_por_quintal &&
+            nuevoValor >= p.unidades_por_quintal
+          ) {
+            message.warning(
+              "Para solicitar tantas unidades, selecciona un quintal en su lugar."
+            );
+            return p; // No actualiza
+          }
+
           let { cantidadQuintales, cantidadUnidades } = p;
           if (campo === "cantidadQuintales") {
             cantidadQuintales = nuevoValor;
@@ -113,7 +136,7 @@ function CrearFactura() {
             cantidadUnidades = nuevoValor;
           }
 
-          // totalUnidadesConsumidas = quintales * (unidades_por_quintal) + cantidadUnidades
+          // total de unidades usando quintales
           const totalUnidadesQuintal = p.precio_quintal
             ? cantidadQuintales * (p.unidades_por_quintal || 1)
             : 0;
@@ -121,7 +144,7 @@ function CrearFactura() {
 
           // Revisar si no excede el stock
           if (totalNecesarias > p.stock) {
-            message.warning("No hay suficiente stock para esa cantidad");
+            message.warning("No hay suficiente stock para esa cantidad.");
             return p; // No actualiza
           }
 
@@ -143,83 +166,12 @@ function CrearFactura() {
     calcularTotal();
   };
 
-  // Confirmar Factura
-  const confirmarFactura = async () => {
-    // Preparar payload
-    const payload = {
-      nombre_cliente: nombreCliente,
-      fecha_entrega: fechaEntrega,
-      costo_envio: costoEnvio,
-      descuento_total: descuentoTotal,
-      usuario_id: 1, // Ajustar si tu backend lo requiere
-      productos: productosSeleccionados.map((prod) => {
-        // totalUnidadesConsumidas:
-        const totalUnidadesQuintal = prod.precio_quintal
-          ? prod.cantidadQuintales * (prod.unidades_por_quintal || 1)
-          : 0;
-        const totalUnidades = totalUnidadesQuintal + prod.cantidadUnidades;
-
-        return {
-          producto_id: prod.id,
-          cantidad: totalUnidades,
-          precio_unitario: prod.precio,
-        };
-      }),
-    };
-
-    try {
-      // Crear la factura
-      const response = await fetch(`${API_URL}/facturas/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error al crear la factura");
-      }
-
-      const data = await response.json();
-
-      // Actualizar stock en el backend
-      for (const prodSel of productosSeleccionados) {
-        const totalUnidadesQuintal = prodSel.precio_quintal
-          ? prodSel.cantidadQuintales * (prodSel.unidades_por_quintal || 1)
-          : 0;
-        const totalUnidadesConsumidas =
-          totalUnidadesQuintal + prodSel.cantidadUnidades;
-
-        const nuevoStock = prodSel.stock - totalUnidadesConsumidas;
-
-        await fetch(`${API_URL}/productos/${prodSel.id}/`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Token ${token}`,
-          },
-          body: JSON.stringify({ stock: nuevoStock }),
-        });
-      }
-
-      message.success(`¡Factura creada con éxito! ID: ${data.id}`, 3);
-
-      navigate(`/verfactura/${data.id}`);
-    } catch (error) {
-      message.error(`Error: ${error.message}`);
-    }
-  };
-
   // Agregar producto a la lista
   const agregarProducto = (producto) => {
-    // Si stock <= 0, no se puede agregar
     if (producto.stock <= 0) {
-      message.warning("Este producto no tiene stock disponible");
+      message.warning("Este producto no tiene stock disponible.");
       return;
     }
-
     setProductosSeleccionados((prev) => {
       const existe = prev.find((p) => p.id === producto.id);
       if (existe) {
@@ -239,9 +191,111 @@ function CrearFactura() {
     calcularTotal();
   };
 
-  if (loading) {
-    return <p className="text-center text-white">Cargando productos...</p>;
+  // Confirmar Factura
+  const confirmarFactura = async () => {
+    // Validaciones básicas
+    if (!nombreCliente.trim()) {
+      message.error("Falta el nombre del cliente.");
+      return;
+    }
+    if (!fechaEntrega) {
+      message.error("Falta la fecha de entrega.");
+      return;
+    }
+    if (productosSeleccionados.length === 0) {
+      message.error("Debes seleccionar al menos un producto.");
+      return;
+    }
+
+    // Evitar múltiples clics
+    setSubmitting(true);
+
+    // Armado del payload
+    const payload = {
+      nombre_cliente: nombreCliente,
+      fecha_entrega: fechaEntrega,
+      costo_envio: costoEnvio,
+      descuento_total: descuentoTotal,
+      usuario_id: 1, // Ajustar según tu backend
+      productos: productosSeleccionados.map((prod) => {
+        const totalUnidadesQuintal = prod.precio_quintal
+          ? prod.cantidadQuintales * (prod.unidades_por_quintal || 1)
+          : 0;
+        const totalUnidades = totalUnidadesQuintal + prod.cantidadUnidades;
+
+        return {
+          producto_id: prod.id,
+          cantidad: totalUnidades,
+          precio_unitario: prod.precio,
+        };
+      }),
+    };
+
+    try {
+      // Crear la factura
+      const responseFactura = await fetch(`${API_URL}/facturas/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!responseFactura.ok) {
+        throw new Error("Error al crear la factura en el servidor.");
+      }
+
+      const dataFactura = await responseFactura.json();
+
+      // Actualizar stock de cada producto
+      const stockUpdatePromises = productosSeleccionados.map(async (prodSel) => {
+        const totalUnidadesQuintal = prodSel.precio_quintal
+          ? prodSel.cantidadQuintales * (prodSel.unidades_por_quintal || 1)
+          : 0;
+        const totalUnidadesConsumidas =
+          totalUnidadesQuintal + prodSel.cantidadUnidades;
+
+        const nuevoStock = prodSel.stock - totalUnidadesConsumidas;
+
+        const responseStock = await fetch(
+          `${API_URL}/productos/${prodSel.id}/`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Token ${token}`,
+            },
+            body: JSON.stringify({ stock: nuevoStock }),
+          }
+        );
+        if (!responseStock.ok) {
+          throw new Error(
+            `Error al actualizar stock del producto ${prodSel.nombre}.`
+          );
+        }
+      });
+
+      // Esperar a que se completen todas las actualizaciones de stock
+      await Promise.all(stockUpdatePromises);
+
+      message.success(`¡Factura creada con éxito! ID: ${dataFactura.id}`, 3);
+      navigate(`/verfactura/${dataFactura.id}`);
+    } catch (error) {
+      console.error(error);
+      message.error(`Error: ${error.message}`);
+      setSubmitting(false); // Reactivamos el botón por si desea reintentar
+    }
+  };
+
+  // Si todavía estamos cargando, mostramos un mensaje de espera
+  if (loadingProductos) {
+    return (
+      <p className="text-center text-white">Cargando productos...</p>
+    );
   }
+
+  // Si hubo error al obtener productos, lo mostramos
   if (error) {
     return <p className="text-red-500 text-center">{error}</p>;
   }
@@ -301,11 +355,11 @@ function CrearFactura() {
         >
           <span className="flex-1">{p.nombre}</span>
 
-          {/* Cantidad por Quintal */}
+          {/* Cantidad por Quintal (si aplica) */}
           {p.precio_quintal !== null && (
             <div className="text-center mx-2">
               <span className="block text-sm text-gray-400">
-                Cantidad por Quintal
+                Cantidad Quintales
               </span>
               <Input
                 type="number"
@@ -322,7 +376,7 @@ function CrearFactura() {
           {/* Cantidad por Unidad */}
           <div className="text-center mx-2">
             <span className="block text-sm text-gray-400">
-              Cantidad por Unidad
+              Cantidad Unidades
             </span>
             <Input
               type="number"
@@ -352,7 +406,6 @@ function CrearFactura() {
           {/* Total por producto */}
           <span className="font-bold mx-2">
             {(() => {
-              // Para mostrar el total de este producto: quintales→unidades + p.cantidadUnidades
               const totalUnidadesQuintal = p.precio_quintal
                 ? p.cantidadQuintales * (p.unidades_por_quintal || 1)
                 : 0;
@@ -373,7 +426,7 @@ function CrearFactura() {
         </div>
       ))}
 
-      {/* Input de búsqueda de productos */}
+      {/* Búsqueda de productos */}
       <div className="mt-6">
         <label className="block text-sm text-gray-300 mb-1">
           <FaSearch className="inline mr-2" />
@@ -421,11 +474,8 @@ function CrearFactura() {
             <Button
               type="default"
               icon={<FaPlus />}
-              onClick={() => {
-                agregarProducto(producto);
-              }}
+              onClick={() => agregarProducto(producto)}
               className="bg-blue-500 text-white border-none hover:bg-blue-600"
-              // Deshabilitar si no hay stock
               disabled={producto.stock <= 0}
             >
               Agregar
@@ -438,14 +488,15 @@ function CrearFactura() {
         Total: Q{totalFactura.toFixed(2)}
       </h2>
 
+      {/* Botón Confirmar Factura */}
       <Button
         type="primary"
         icon={<FaCheckCircle />}
         className="w-full !bg-green-500 !border-none hover:!bg-green-600"
-        disabled={productosSeleccionados.length === 0}
+        disabled={productosSeleccionados.length === 0 || submitting}
         onClick={confirmarFactura}
       >
-        Confirmar Factura
+        {submitting ? "Enviando..." : "Confirmar Factura"}
       </Button>
     </div>
   );

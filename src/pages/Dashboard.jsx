@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUser, FaBox, FaFileInvoice, FaSignOutAlt, FaChartLine, FaBars } from "react-icons/fa";
-import { Card, Typography, Button } from "antd";
+import { FaUser, FaBox, FaFileInvoice, FaSignOutAlt, FaChartLine, FaShieldAlt, FaBars } from "react-icons/fa";
+import { Card, Typography, Button, Modal, Input, message } from "antd";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import "tailwindcss/tailwind.css";
 
@@ -16,9 +16,12 @@ function Dashboard() {
     total_ventas: 0,
     ganancias_mes: 0,
   });
+
   const [ventasDiarias, setVentasDiarias] = useState([]);
   const [ventasMensuales, setVentasMensuales] = useState([]);
   const [menuOpen, setMenuOpen] = useState(true);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -45,7 +48,7 @@ function Dashboard() {
       setVentasDiarias(formatChartData(dailyData.ventas_por_dia, "Día"));
       setVentasMensuales(formatChartData(monthlyData.ventas_por_mes, "Mes"));
     } catch (err) {
-      console.error("Error al obtener datos:", err);
+      message.error(`Error: ${err.message}`);
     }
   };
 
@@ -56,10 +59,24 @@ function Dashboard() {
     }));
   };
 
+  const handleAdminLogin = () => {
+    if (!adminPassword.trim()) {
+      message.warning("Por favor, ingresa una contraseña.");
+      return;
+    }
+
+    if (adminPassword === "AdminJean") {
+      message.success("Acceso concedido. Redirigiendo...");
+      navigate("/administrador");
+    } else {
+      message.error("Contraseña incorrecta. Inténtalo de nuevo.");
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       {/* Menú lateral */}
-      <div className={`bg-gray-800 transition-all duration-300 ${menuOpen ? "w-64" : "w-16"} p-4 flex flex-col`}> 
+      <div className={`bg-gray-800 transition-all duration-300 ${menuOpen ? "w-64" : "w-16"} p-4 flex flex-col`}>
         <button onClick={() => setMenuOpen(!menuOpen)} className="text-white mb-6">
           <FaBars size={24} />
         </button>
@@ -73,7 +90,16 @@ function Dashboard() {
           <Link to="/facturas" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700">
             <FaFileInvoice /> {menuOpen && "Facturas"}
           </Link>
-          <button onClick={() => navigate("/login")} className="flex items-center gap-3 p-2 rounded-lg bg-red-600 hover:bg-red-800">
+          <button
+            onClick={() => setShowAdminModal(true)}
+            className="flex items-center gap-3 p-2 rounded-lg bg-purple-600 hover:bg-purple-800"
+          >
+            <FaShieldAlt /> {menuOpen && "Administrador"}
+          </button>
+          <button
+            onClick={() => navigate("/login")}
+            className="flex items-center gap-3 p-2 rounded-lg bg-red-600 hover:bg-red-800"
+          >
             <FaSignOutAlt /> {menuOpen && "Cerrar Sesión"}
           </button>
         </nav>
@@ -82,7 +108,7 @@ function Dashboard() {
       {/* Contenido principal */}
       <div className="flex-1 p-6">
         <Title level={2} className="text-blue-400 text-center">Panel de Control</Title>
-        
+
         <div className="grid grid-cols-4 gap-6 mb-6">
           {Object.entries(estadisticas).map(([key, value]) => (
             <Card key={key} className="bg-gray-800 text-white shadow-lg p-4 text-center">
@@ -91,7 +117,7 @@ function Dashboard() {
             </Card>
           ))}
         </div>
-        
+
         {/* Gráficos */}
         <div className="grid grid-cols-2 gap-6">
           <Card className="bg-gray-800 text-white p-6 shadow-lg">
@@ -108,7 +134,7 @@ function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
           </Card>
-          
+
           <Card className="bg-gray-800 text-white p-6 shadow-lg">
             <Title level={4} className="text-center text-blue-300 flex items-center justify-center gap-2">
               <FaChartLine /> Ventas por Mes
@@ -125,6 +151,26 @@ function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Modal de Administrador */}
+      <Modal
+        title="🔒 Acceso Administrativo"
+        open={showAdminModal}
+        onOk={handleAdminLogin}
+        onCancel={() => setShowAdminModal(false)}
+        okText="Ingresar"
+        cancelText="Cancelar"
+      >
+        <p className="text-center font-bold text-lg text-purple-600">
+          ⚔️ "Estás delante del monarca." – Sung Jin-Woo ⚔️
+        </p>
+        <p className="text-center">Solo los administradores pueden entrar aquí.</p>
+        <Input.Password
+          placeholder="Ingresa la contraseña"
+          value={adminPassword}
+          onChange={(e) => setAdminPassword(e.target.value)}
+        />
+      </Modal>
     </div>
   );
 }
