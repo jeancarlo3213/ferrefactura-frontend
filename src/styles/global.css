@@ -1,13 +1,20 @@
+/* ============================= */
+/*     GLOBAL TAILWIND IMPORTS   */
+/* ============================= */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Aplicar fondo y colores globales */
+/* ============================= */
+/*     ESTILOS GENERALES         */
+/* ============================= */
+
+/* Fondo y color de texto por defecto (para la pantalla) */
 body {
   @apply bg-gray-900 text-white;
 }
 
-/* Botones */
+/* Estilos para botones */
 button {
   @apply px-4 py-2 rounded-lg font-semibold transition-all;
 }
@@ -22,10 +29,94 @@ button {
 
 /* Animaciones */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-
 .fade-in {
   animation: fadeIn 0.5s ease-in-out;
+}
+
+/* ============================= */
+/*     NAVBAR                    */
+/* ============================= */
+
+/* Estilos del Navbar en pantalla */
+nav {
+  background-color: #333; /* o @apply bg-gray-800 */
+  color: white;
+  padding: 10px;
+}
+
+/* ============================= */
+/*     REGLAS DE IMPRESIÓN        */
+/* ============================= */
+
+/* Ocultar elementos innecesarios en la impresión */
+@media print {
+  /* Ocultar navbar y botones en la impresión */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Configurar la impresión para tickets térmicos */
+  @page {
+    size: auto; /* Se ajusta dinámicamente según el contenido */
+    margin: 0; /* Sin márgenes extra */
+  }
+
+  /* Contenedor de la factura/ticket */
+  .ticket-container {
+    max-width: 58mm; /* Se ajusta a rollos térmicos de 58mm (cambiar a 80mm si la impresora lo permite) */
+    width: 100%;
+    padding: 5px;
+    font-size: 10px; /* Reducir tamaño de fuente */
+    background-color: #fff;
+    color: #000;
+    margin: 0 auto;
+  }
+
+  /* Evitar que los productos se dividan entre páginas */
+  .ticket-product {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Centrar y ajustar textos */
+  .ticket-header,
+  .ticket-summary,
+  .thanks {
+    text-align: center;
+    font-size: 10px;
+  }
+
+  /* Asegurar que los totales no se dividan */
+  .ticket-summary {
+    page-break-before: avoid;
+    break-inside: avoid;
+  }
+
+  /* Reducir el padding/margen de las tablas */
+  table {
+    width: 100%;
+    font-size: 10px;
+    border-collapse: collapse;
+  }
+
+  table th,
+  table td {
+    padding: 2px;
+    text-align: left;
+  }
+
+  /* Resaltar total */
+  .highlight {
+    font-weight: bold;
+    font-size: 12px;
+  }
 }

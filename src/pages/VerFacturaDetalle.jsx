@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Spin, Card, Descriptions, Divider, Alert } from "antd";
+import { Spin, Alert } from "antd";
 import { FaArrowLeft, FaPrint } from "react-icons/fa";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -8,6 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 function VerFacturaDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [factura, setFactura] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -20,7 +21,6 @@ function VerFacturaDetalle() {
         const response = await fetch(`${API_URL}/facturas/${id}/`, {
           headers: { Authorization: `Token ${token}` },
         });
-
         if (!response.ok) {
           throw new Error("Error al obtener la factura.");
         }
@@ -32,7 +32,6 @@ function VerFacturaDetalle() {
         setLoading(false);
       }
     };
-
     fetchFactura();
   }, [id, token]);
 
@@ -46,7 +45,7 @@ function VerFacturaDetalle() {
 
   if (error) {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-4 max-w-md mx-auto">
         <Alert message="Error" description={error} type="error" showIcon closable />
       </div>
     );
@@ -54,79 +53,203 @@ function VerFacturaDetalle() {
 
   if (!factura) {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
-        <Alert message="Factura no encontrada" description={`No se encontró la factura con ID ${id}.`} type="warning" showIcon />
+      <div className="p-4 max-w-md mx-auto">
+        <Alert
+          message="Factura no encontrada"
+          description={`No se encontró la factura con ID ${id}.`}
+          type="warning"
+          showIcon
+        />
       </div>
     );
   }
 
-  const { nombre_cliente, fecha_creacion, fecha_entrega, costo_envio, descuento_total, detalles } = factura;
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DATOS DE FACTURA
+  // ─────────────────────────────────────────────────────────────────────────────
+  const {
+    nombre_cliente,
+    fecha_creacion,
+    fecha_entrega,
+    costo_envio,
+    descuento_total,
+    detalles = [],
+  } = factura;
 
+  // Convertir a número
+  const costoEnvioNum = parseFloat(costo_envio) || 0;
+  const descuentoTotalNum = parseFloat(descuento_total) || 0;
+
+  let subTotal = 0;
+  detalles.forEach((item) => {
+    const precio = parseFloat(item.precio_unitario) || 0;
+    subTotal += item.cantidad * precio;
+  });
+  const total = subTotal + costoEnvioNum - descuentoTotalNum;
+
+  const fechaCreacionStr = new Date(fecha_creacion).toLocaleString();
+  const fechaEntregaStr = fecha_entrega || "No especificada";
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // FUNCIÓN PARA IMPRIMIR
+  // ─────────────────────────────────────────────────────────────────────────────
   const handlePrint = () => {
     window.print();
   };
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ESTILOS DE TICKET (para reducir a 58mm y letra 10px, sin repintar navbar, etc.)
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Podrías meter esto en un CSS aparte si prefieres.
+  const ticketStyles = `
+    @media print {
+      /* Forzamos ancho de 58mm y márgenes mínimos */
+      @page {
+        size: 58mm auto;
+        margin: 5mm;
+      }
+      /* Contenedor principal en impresión: fondo blanco, texto negro, fuente pequeña */
+      .ticket-container {
+        max-width: 58mm !important;
+        background-color: #fff !important;
+        color: #000 !important;
+        font-size: 10px !important;
+        margin: 0 auto !important;
+      }
+    }
+
+    /* En pantalla, mantiene un estilo un poco más grande (si deseas) */
+    .ticket-container {
+      background-color: #1f2937;
+      color: #fff;
+      padding: 1rem;
+      border-radius: 6px;
+      margin: 1rem auto;
+      max-width: 400px;
+    }
+
+    .ticket-header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .ticket-header h1 {
+      font-size: 1rem;
+      margin: 0;
+    }
+    .ticket-header p {
+      margin: 0;
+      font-size: 0.8rem;
+    }
+    .ticket-box {
+      border: 1px solid #444;
+      padding: 6px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+    }
+    .ticket-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+    }
+    .ticket-table th,
+    .ticket-table td {
+      padding: 4px;
+      border-bottom: 1px solid #555;
+      text-align: left;
+      font-size: 0.8rem;
+    }
+    .ticket-summary {
+      margin-top: 0.5rem;
+      text-align: right;
+      font-size: 0.85rem;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #0f0; 
+    }
+    .thanks {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 0.8rem;
+    }
+  `;
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-gray-900 text-white rounded-lg shadow-lg">
-      {/* 🖨 Sección imprimible optimizada para impresora térmica */}
-      <div id="printable-area" className="print-container">
-        <div className="text-center mb-4">
-          {/* 🔹 Logo de la ferretería (puedes reemplazarlo con una imagen) */}
-          <h1 className="text-3xl font-bold">🛠️ Ferretería El Campesino</h1>
-          <p className="text-sm">📍 Dirección: Zona 1, Ciudad<br/>📞 Tel: +502 1234-5678</p>
+    <div className="bg-gray-900 min-h-screen text-white p-4">
+      {/* Inyectamos los estilos para el ticket */}
+      <style>{ticketStyles}</style>
+
+      {/* Contenedor principal del ticket */}
+      <div className="ticket-container">
+        {/* ENCABEZADO: DATOS DE LA FERRETERÍA */}
+        <div className="ticket-header">
+          <h1>FERRETERÍA EL CAMPESINO</h1>
+          <p>Aldea Mediacuesta</p>
+          <p>Tel: +502 57765449 (Pedidos)</p>
         </div>
 
-        <Card bordered={false} className="bg-gray-800 text-white">
-          <h2 className="text-2xl font-bold mb-4 text-center">Detalle de Factura #{id}</h2>
+        {/* BLOQUE DE DATOS FACTURA */}
+        <div className="ticket-box">
+          <p style={{ margin: 0 }}>
+            <strong>Factura #{id}</strong>
+          </p>
+          <p style={{ margin: 0 }}>Cliente: {nombre_cliente}</p>
+          <p style={{ margin: 0 }}>Creación: {fechaCreacionStr}</p>
+          <p style={{ margin: 0 }}>Entrega: {fechaEntregaStr}</p>
+        </div>
 
-          <Descriptions bordered column={1} labelStyle={{ color: "#aaa" }} contentStyle={{ color: "#fff" }}>
-            <Descriptions.Item label="Cliente">{nombre_cliente || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Fecha Creación">{new Date(fecha_creacion).toLocaleString()}</Descriptions.Item>
-            <Descriptions.Item label="Fecha Entrega">{fecha_entrega || "No especificada"}</Descriptions.Item>
-            <Descriptions.Item label="Costo de Envío">Q{costo_envio || 0}</Descriptions.Item>
-            <Descriptions.Item label="Descuento Total">Q{descuento_total || 0}</Descriptions.Item>
-          </Descriptions>
-
-          <Divider />
-
-          <h2 className="text-xl font-semibold mb-2">Productos</h2>
-          {detalles.length === 0 ? (
-            <p>No hay detalles registrados</p>
-          ) : (
-            detalles.map((detalle, idx) => {
-              const cantidadQuintales = Math.floor(detalle.cantidad / detalle.unidades_por_quintal);
-              const cantidadUnidades = detalle.cantidad % detalle.unidades_por_quintal;
+        {/* TABLA DE PRODUCTOS */}
+        <table className="ticket-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Cant</th>
+              <th>P/U</th>
+              <th>Subt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {detalles.map((item, idx) => {
+              const precioUnit = parseFloat(item.precio_unitario) || 0;
+              const subtotalItem = item.cantidad * precioUnit;
               return (
-                <div key={idx} className="flex justify-between items-center p-2 mb-2 bg-gray-700 rounded">
-                  <span>{detalle.producto_nombre} ({detalle.categoria})</span>
-                  {detalle.unidades_por_quintal ? (
-                    <>
-                      <span>Quintales: {cantidadQuintales}</span>
-                      <span>Unidades: {cantidadUnidades}</span>
-                      <span>Precio Quintal: Q{detalle.precio_quintal}</span>
-                    </>
-                  ) : (
-                    <span>Cantidad: {detalle.cantidad}</span>
-                  )}
-                  <span>Subtotal: Q{(detalle.cantidad * detalle.precio_unitario).toFixed(2)}</span>
-                </div>
+                <tr key={`detalle-${idx}`}>
+                  <td>{item.producto_nombre}</td>
+                  <td>{item.cantidad}</td>
+                  <td>Q{precioUnit.toFixed(2)}</td>
+                  <td>Q{subtotalItem.toFixed(2)}</td>
+                </tr>
               );
-            })
-          )}
-        </Card>
+            })}
+          </tbody>
+        </table>
 
-        <h2 className="text-center mt-4">🔹 ¡Gracias por su compra! 🔹</h2>
+        {/* RESUMEN DE PRECIOS */}
+        <div className="ticket-summary">
+          <div>Subtotal: Q{subTotal.toFixed(2)}</div>
+          <div>Costo Envío: Q{costoEnvioNum.toFixed(2)}</div>
+          <div>Descuento: Q{descuentoTotalNum.toFixed(2)}</div>
+          <div className="highlight">Total: Q{total.toFixed(2)}</div>
+        </div>
+
+        <div className="thanks">¡Gracias por su compra!</div>
       </div>
 
-      <Divider />
-
-      {/* Botones de acción (Ocultos en la impresión) */}
-      <div className="flex gap-2 no-print">
-        <button onClick={() => navigate("/facturas")} className="bg-blue-500 px-3 py-2 rounded flex items-center gap-2">
+      {/* BOTONES (ocultos en impresión si quieres usar la clase no-print) */}
+      <div className="flex gap-2 justify-center mt-4 no-print">
+        <button
+          onClick={() => navigate("/facturas")}
+          className="bg-blue-500 px-3 py-2 rounded flex items-center gap-2"
+        >
           <FaArrowLeft /> Volver a Facturas
         </button>
-
-        <button onClick={handlePrint} className="bg-green-500 px-3 py-2 rounded flex items-center gap-2">
+        <button
+          onClick={handlePrint}
+          className="bg-green-500 px-3 py-2 rounded flex items-center gap-2"
+        >
           <FaPrint /> Imprimir Factura
         </button>
       </div>
