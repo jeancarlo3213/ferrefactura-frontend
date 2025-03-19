@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Card, Input, message } from "antd";
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 function VerProductos() {
   const [productos, setProductos] = useState([]);
@@ -8,7 +10,7 @@ function VerProductos() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    fetch("http://127.0.0.1:8000/api/productos/", {
+    fetch(`${API_URL}/productos/`, {
       headers: { Authorization: `Token ${token}` },
     })
       .then((res) => {

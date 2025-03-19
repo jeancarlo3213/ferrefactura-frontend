@@ -27,6 +27,8 @@ function Facturas() {
   const [statsPieData, setStatsPieData] = useState([]);
 
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
+
 
   // Colores para cada porción del PieChart
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#8dd1e1", "#ffbb28"];
@@ -37,7 +39,8 @@ function Facturas() {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No hay token de autenticación.");
 
-      const response = await fetch("http://127.0.0.1:8000/api/facturas-completas/", {
+      const response = await fetch(`${API_URL}/facturas-completas/`, {
+
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +120,8 @@ function Facturas() {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No hay token de autenticación.");
 
-      const response = await fetch(`http://127.0.0.1:8000/api/facturas/${facturaId}/`, {
+      const response = await fetch(`${API_URL}/facturas/${facturaId}/`, {
+
         method: "DELETE",
         headers: {
           Authorization: `Token ${token}`,

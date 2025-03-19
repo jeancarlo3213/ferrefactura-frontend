@@ -3,8 +3,8 @@ import axios from "axios";
 import { Card, Button, Modal, Input, Form, message } from "antd";
 import { Link } from "react-router-dom";
 import { FaUserPlus, FaBook, FaDollarSign, FaUserFriends, FaCheckCircle, FaPlusCircle } from "react-icons/fa";
+const API_URL = import.meta.env.VITE_API_URL;
 
-const API_URL = "http://127.0.0.1:8000/api";
 
 function Administrador() {
   const [caja, setCaja] = useState(null);
@@ -28,7 +28,6 @@ function Administrador() {
       const [cajaRes, deudasRes] = await Promise.all([
         axios.get(`${API_URL}/caja-diaria/`, { headers }),
         axios.get(`${API_URL}/registros-deudas/`, { headers }),
-        axios.get(`${API_URL}/deudores/`, { headers }),
       ]);
 
       setCaja(cajaRes.data.length ? cajaRes.data[cajaRes.data.length - 1] : null);

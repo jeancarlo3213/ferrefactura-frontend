@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaBox, FaFileInvoice, FaSignOutAlt, FaClock, FaShieldAlt } from "react-icons/fa";
 import { Card, Typography, Button, Modal, Input, message } from "antd";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const { Title } = Typography;
 
@@ -30,10 +31,11 @@ function Dashboard() {
       if (!token) throw new Error("No hay token de autenticación.");
 
       const [statsRes, dailyRes, monthlyRes] = await Promise.all([
-        fetch("http://127.0.0.1:8000/api/estadisticas-facturas/", { headers: { Authorization: `Token ${token}` } }),
-        fetch("http://127.0.0.1:8000/api/ventas-diarias/", { headers: { Authorization: `Token ${token}` } }),
-        fetch("http://127.0.0.1:8000/api/ventas-anuales/", { headers: { Authorization: `Token ${token}` } })
+        fetch(`${API_URL}/estadisticas-facturas/`, { headers: { Authorization: `Token ${token}` } }),
+        fetch(`${API_URL}/ventas-diarias/`, { headers: { Authorization: `Token ${token}` } }),
+        fetch(`${API_URL}/ventas-anuales/`, { headers: { Authorization: `Token ${token}` } })
       ]);
+      
 
       if (!statsRes.ok || !dailyRes.ok || !monthlyRes.ok) throw new Error("Error al obtener datos.");
 

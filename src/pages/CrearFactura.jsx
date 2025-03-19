@@ -5,6 +5,8 @@ import { Input, Button, message } from "antd";
 // React Icons
 import { FaPlus, FaCheckCircle, FaSearch, FaTrash } from "react-icons/fa";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function CrearFactura() {
   const [productos, setProductos] = useState([]);
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
@@ -28,7 +30,7 @@ function CrearFactura() {
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/productos/", {
+        const response = await fetch(`${API_URL}/productos/`, {
           headers: { Authorization: `Token ${token}` },
         });
         if (!response.ok) throw new Error("No autorizado");
@@ -167,7 +169,7 @@ function CrearFactura() {
 
     try {
       // Crear la factura
-      const response = await fetch("http://127.0.0.1:8000/api/facturas/", {
+      const response = await fetch(`${API_URL}/facturas/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -192,7 +194,7 @@ function CrearFactura() {
 
         const nuevoStock = prodSel.stock - totalUnidadesConsumidas;
 
-        await fetch(`http://127.0.0.1:8000/api/productos/${prodSel.id}/`, {
+        await fetch(`${API_URL}/productos/${prodSel.id}/`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Form, Input, InputNumber, Button, Card, Typography, message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-const { Title } = Typography;
+const API_URL = import.meta.env.VITE_API_URL
 
 function AgregarProducto() {
   const [loading, setLoading] = useState(false);
@@ -42,7 +42,7 @@ function AgregarProducto() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/productos/", {
+      const response = await fetch(`${API_URL}/productos/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

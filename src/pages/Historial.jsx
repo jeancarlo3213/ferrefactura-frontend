@@ -3,7 +3,7 @@ import axios from "axios";
 import { Table, Card, Typography, message } from "antd";
 import { Link } from "react-router-dom";
 
-const API_URL = "http://127.0.0.1:8000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 const { Title } = Typography;
 
 function HistorialRegistros() {

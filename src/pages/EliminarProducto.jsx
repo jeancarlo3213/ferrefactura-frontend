@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Input, message, Modal, Card } from "antd";
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 function EliminarProducto() {
   const [productos, setProductos] = useState([]);
@@ -13,7 +15,7 @@ function EliminarProducto() {
   const fetchProductos = async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/productos/", {
+      const response = await fetch(`${API_URL}/productos/`, {
         headers: { Authorization: `Token ${token}` },
       });
       if (!response.ok) throw new Error("Error al obtener los productos");
@@ -32,7 +34,7 @@ function EliminarProducto() {
         const token = localStorage.getItem("token");
         setLoading(true);
         try {
-          const response = await fetch(`http://127.0.0.1:8000/api/productos/${id}/`, {
+          const response = await fetch(`${API_URL}/productos/${id}/`, {
             method: "DELETE",
             headers: { Authorization: `Token ${token}` },
           });

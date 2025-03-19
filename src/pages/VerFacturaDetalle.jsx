@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Spin, Card, Descriptions, Divider, Alert } from "antd";
 import { FaArrowLeft, FaPrint } from "react-icons/fa";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function VerFacturaDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -15,7 +17,7 @@ function VerFacturaDetalle() {
   useEffect(() => {
     const fetchFactura = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/facturas/${id}/`, {
+        const response = await fetch(`${API_URL}/facturas/${id}/`, {
           headers: { Authorization: `Token ${token}` },
         });
 
