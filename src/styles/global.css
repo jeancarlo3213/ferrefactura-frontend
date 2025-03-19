@@ -2,22 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos globales */
+/* Aplicar fondo y colores globales */
 body {
   @apply bg-gray-900 text-white;
 }
 
-/* Botones generales */
+/* Botones */
 button {
-  @apply px-4 py-2 rounded-lg font-semibold transition duration-300;
+  @apply px-4 py-2 rounded-lg font-semibold transition-all;
 }
 
-/* Botón principal */
 .btn-primary {
-  @apply bg-blue-500 text-white hover:bg-blue-600 flex items-center gap-2;
+  @apply bg-blue-500 hover:bg-blue-700 text-white;
 }
 
-/* Botón de eliminar/cerrar sesión */
 .btn-danger {
-  @apply bg-red-500 text-white hover:bg-red-600 flex items-center gap-2;
+  @apply bg-red-500 hover:bg-red-700 text-white;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
 }

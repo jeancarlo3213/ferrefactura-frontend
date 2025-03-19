@@ -2,8 +2,9 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 import App from "./App";
-import "./styles/global.css";
-import 'antd/dist/reset.css';
+import 'antd/dist/reset.css'; // Primero Ant Design
+import "./styles/global.css"; // Luego Tailwind
+
 
 
 

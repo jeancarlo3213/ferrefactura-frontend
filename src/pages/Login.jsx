@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/login.css"; // Importamos el CSS
+import "@/styles/login.css";
 
 function Login() {
   const navigate = useNavigate();
@@ -9,10 +9,24 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [glowStyle, setGlowStyle] = useState({});
 
   useEffect(() => {
-    document.body.classList.add("login-page"); // Agrega la clase al body cuando entra al login
-    return () => document.body.classList.remove("login-page"); // La quita cuando cambia de página
+    document.body.classList.add("login-page");
+    return () => document.body.classList.remove("login-page");
+  }, []);
+
+  // 🔹 Detecta el movimiento del mouse para el efecto de resplandor
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const { clientX: x, clientY: y } = e;
+      setGlowStyle({
+        background: `radial-gradient(circle at ${x}px ${y}px, rgba(255, 255, 255, 0.1), transparent 50%)`,
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const handleLogin = async (e) => {
@@ -45,7 +59,7 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-container" style={glowStyle}>
       <h2>Iniciar Sesión</h2>
       <form onSubmit={handleLogin} className="login-form">
         <div className="input-group">
