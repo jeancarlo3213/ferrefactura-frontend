@@ -2,13 +2,16 @@ import React, { useState } from "react";
 import { Form, Input, InputNumber, Button, Card, Typography, message } from "antd";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL
+const { Title } = Typography;
+const API_URL = import.meta.env.VITE_API_URL;
 
 function AgregarProducto() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const onFinish = async (values) => {
+    if (loading) return; // Evita múltiples envíos
+
     setLoading(true);
     const token = localStorage.getItem("token");
 
@@ -61,7 +64,11 @@ function AgregarProducto() {
       // 🔹 Redirige automáticamente después de 2 segundos
       setTimeout(() => navigate("/productos"), 2000);
     } catch (error) {
-      message.error(`❌ Error: ${error.message}`);
+      if (error.message.includes("Failed to fetch")) {
+        message.error("❌ Error de conexión: No se pudo comunicar con el servidor.");
+      } else {
+        message.error(`❌ Error: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -120,8 +127,14 @@ function AgregarProducto() {
             <InputNumber min={0} className="w-full" />
           </Form.Item>
 
-          <Button type="primary" htmlType="submit" loading={loading} className="w-full">
-            Agregar Producto
+          <Button 
+            type="primary" 
+            htmlType="submit" 
+            loading={loading} 
+            className="w-full bg-blue-500" 
+            disabled={loading}
+          >
+            {loading ? "Creando Producto..." : "Agregar Producto"}
           </Button>
         </Form>
       </Card>
