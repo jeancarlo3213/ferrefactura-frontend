@@ -64,9 +64,6 @@ function VerFacturaDetalle() {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // DATOS DE FACTURA
-  // ─────────────────────────────────────────────────────────────────────────────
   const {
     nombre_cliente,
     fecha_creacion,
@@ -76,7 +73,6 @@ function VerFacturaDetalle() {
     detalles = [],
   } = factura;
 
-  // Convertir valores numéricos
   const costoEnvioNum = parseFloat(costo_envio) || 0;
   const descuentoTotalNum = parseFloat(descuento_total) || 0;
 
@@ -91,75 +87,68 @@ function VerFacturaDetalle() {
   const fechaCreacionStr = new Date(fecha_creacion).toLocaleString();
   const fechaEntregaStr = fecha_entrega || "No especificada";
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // FUNCIÓN PARA IMPRIMIR
-  // ─────────────────────────────────────────────────────────────────────────────
   const handlePrint = () => {
     window.print();
   };
 
   return (
     <div className="bg-gray-900 min-h-screen text-white p-4">
-      {/* 🔹 Estilos de impresión corregidos */}
       <style>{`
         @media print {
           @page {
-            size: 80mm auto; /* 🔹 Ancho de 80mm, altura automática */
+            size: 58mm auto;
             margin: 0;
           }
-
+          body {
+            background: #fff !important;
+            color: #000 !important;
+            margin: 0;
+            padding: 0;
+          }
           .ticket-container {
-            max-width: 80mm !important;
+            max-width: 58mm;
             width: 100%;
-            padding: 5px;
-            font-size: 10px;
-            background-color: #fff;
+            font-size: 12px;
             color: #000;
+            background: #fff;
+            padding: 5px;
             margin: 0 auto;
             page-break-inside: avoid;
           }
-
           .ticket-table {
             width: 100%;
-            font-size: 10px;
             border-collapse: collapse;
-            page-break-inside: avoid;
+            text-align: left;
           }
-
-          .ticket-summary {
+          .ticket-table th, .ticket-table td {
+            padding: 2px;
+            border-bottom: 1px dashed black;
+          }
+          .ticket-summary, .ticket-header {
             page-break-before: avoid;
             page-break-inside: avoid;
           }
-
-          /* 🔹 Asegurar que no se divida en 2 páginas */
-          .ticket-content {
-            page-break-inside: avoid;
-            page-break-after: auto;
-          }
-
-          /* 🔹 Ocultar botones y navbar en la impresión */
           .no-print {
-            display: none !important;
+            display: none;
           }
         }
       `}</style>
 
-      {/* Contenedor del ticket */}
-      <div className="ticket-container">
-        <div className="ticket-header">
-          <h1>FERRETERÍA EL CAMPESINO</h1>
+      <div className="max-w-lg mx-auto bg-gray-800 p-4 rounded-lg shadow-lg ticket-container">
+        <div className="text-center">
+          <h2 className="text-lg font-bold">FERRETERÍA EL CAMPESINO</h2>
           <p>Aldea Mediacuesta</p>
-          <p>Tel: +502 57765449 (Pedidos)</p>
+          <p>Tel: +502 57765449</p>
         </div>
 
-        <div className="ticket-box">
+        <div className="mt-2">
           <p><strong>Factura #{id}</strong></p>
           <p>Cliente: {nombre_cliente}</p>
           <p>Creación: {fechaCreacionStr}</p>
           <p>Entrega: {fechaEntregaStr}</p>
         </div>
 
-        <table className="ticket-table">
+        <table className="ticket-table w-full mt-3 border-t border-gray-400">
           <thead>
             <tr>
               <th>Producto</th>
@@ -180,20 +169,19 @@ function VerFacturaDetalle() {
           </tbody>
         </table>
 
-        <div className="ticket-summary">
+        <div className="ticket-summary mt-4">
           <p>Subtotal: Q{subTotal.toFixed(2)}</p>
           <p>Costo Envío: Q{costoEnvioNum.toFixed(2)}</p>
           <p>Descuento: Q{descuentoTotalNum.toFixed(2)}</p>
-          <p className="highlight">Total: Q{total.toFixed(2)}</p>
+          <p className="font-bold text-lg">Total: Q{total.toFixed(2)}</p>
         </div>
 
-        {/* Botones (ocultos en la impresión) */}
-        <div className="flex gap-2 justify-center mt-4 no-print">
-          <button onClick={() => navigate("/facturas")} className="bg-blue-500 px-3 py-2 rounded flex items-center gap-2">
-            <FaArrowLeft /> Volver a Facturas
+        <div className="flex justify-center gap-2 mt-4 no-print">
+          <button onClick={() => navigate("/facturas")} className="btn-primary">
+            <FaArrowLeft /> Volver
           </button>
-          <button onClick={handlePrint} className="bg-green-500 px-3 py-2 rounded flex items-center gap-2">
-            <FaPrint /> Imprimir Factura
+          <button onClick={handlePrint} className="bg-green-500 px-3 py-2 rounded">
+            <FaPrint /> Imprimir
           </button>
         </div>
       </div>
