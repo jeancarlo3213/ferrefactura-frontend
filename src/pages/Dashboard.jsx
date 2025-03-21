@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaUser, FaBox, FaFileInvoice, FaSignOutAlt, FaChartLine, FaShieldAlt, FaBars } from "react-icons/fa";
+import { FaUser, FaBox, FaFileInvoice, FaSignOutAlt, FaChartLine, FaShieldAlt, FaBars, FaMoneyBillWave } from "react-icons/fa";
 import { Card, Typography, Button, Modal, Input, message } from "antd";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import "tailwindcss/tailwind.css";
@@ -65,7 +65,7 @@ function Dashboard() {
       return;
     }
 
-    if (adminPassword === "AdminJean") {
+    if (adminPassword === "1") {
       message.success("Acceso concedido. Redirigiendo...");
       navigate("/administrador");
     } else {
@@ -89,6 +89,9 @@ function Dashboard() {
           </Link>
           <Link to="/facturas" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700">
             <FaFileInvoice /> {menuOpen && "Facturas"}
+          </Link>
+          <Link to="/deudores" className="flex items-center gap-3 p-2 rounded-lg bg-yellow-500 hover:bg-yellow-600">
+            <FaMoneyBillWave /> {menuOpen && "Deudores"}
           </Link>
           <button
             onClick={() => setShowAdminModal(true)}
@@ -161,9 +164,6 @@ function Dashboard() {
         okText="Ingresar"
         cancelText="Cancelar"
       >
-        <p className="text-center font-bold text-lg text-purple-600">
-          ⚔️ "Estás delante del monarca." – Sung Jin-Woo ⚔️
-        </p>
         <p className="text-center">Solo los administradores pueden entrar aquí.</p>
         <Input.Password
           placeholder="Ingresa la contraseña"
