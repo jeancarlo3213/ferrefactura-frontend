@@ -46,7 +46,7 @@ function App() {
         <Route path="/historial" element={<Historial />} />
         <Route path="/caja-diaria" element={<CajaDiaria />} />
         <Route path="/deudores" element={<Deudores />} />
-        <Route path="/editarfactura/:id" element={<EditarFactura />} />
+        <Route path="/editar-factura/:id" element={<EditarFactura />} />
       </Routes>
     </>
   );
