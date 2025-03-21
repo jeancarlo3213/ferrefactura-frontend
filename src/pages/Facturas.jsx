@@ -42,7 +42,9 @@ function Facturas() {
 
   // Filtrar facturas por nombre de cliente y fecha
   const filteredFacturas = facturas.filter((factura) => {
-    const matchesClient = factura.nombre_cliente.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesClient = factura.nombre_cliente
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const facturaDate = new Date(factura.fecha_creacion);
     const matchesDate =
       (!startDate || facturaDate >= new Date(startDate)) &&
@@ -61,6 +63,16 @@ function Facturas() {
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <h2 className="text-3xl font-bold text-center mb-4">Gestión de Facturas</h2>
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+
+      {/* Botón para Crear Factura */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => navigate("/crearfactura")}
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2"
+        >
+          <Plus size={18} /> Crear Factura
+        </button>
+      </div>
 
       {/* Filtros de búsqueda */}
       <div className="flex flex-wrap gap-2 justify-center mb-6">
@@ -83,9 +95,15 @@ function Facturas() {
           onChange={(e) => setEndDate(e.target.value)}
           className="p-1 bg-gray-800 text-white rounded w-40"
         />
-        <button onClick={resetFilters} className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded">Borrar Filtros</button>
+        <button
+          onClick={resetFilters}
+          className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
+        >
+          Borrar Filtros
+        </button>
       </div>
 
+      {/* Tabla de Facturas */}
       <div className="overflow-x-auto mb-8">
         <table className="w-full text-left border border-gray-700 rounded-lg overflow-hidden">
           <thead className="bg-gray-800 text-white uppercase">
@@ -101,27 +119,53 @@ function Facturas() {
           <tbody>
             {filteredFacturas.length > 0 ? (
               filteredFacturas.map((factura) => (
-                <tr key={factura.id} className="border-b border-gray-700 hover:bg-gray-800 transition">
+                <tr
+                  key={factura.id}
+                  className="border-b border-gray-700 hover:bg-gray-800 transition"
+                >
                   <td className="p-3">{factura.id}</td>
-                  <td className="p-3">{format(new Date(factura.fecha_creacion), "dd/MM/yyyy, p")}</td>
+                  <td className="p-3">
+                    {format(new Date(factura.fecha_creacion), "dd/MM/yyyy, p")}
+                  </td>
                   <td className="p-3">{factura.nombre_cliente}</td>
                   <td className="p-3">
                     {factura.detalles.map((detalle) => (
-                      <div key={detalle.id}>{detalle.producto_nombre} (x{detalle.cantidad})</div>
+                      <div key={detalle.id}>
+                        {detalle.producto_nombre} (x{detalle.cantidad})
+                      </div>
                     ))}
                   </td>
                   <td className="p-3">
-                    Q{factura.detalles.reduce((total, detalle) => total + detalle.cantidad * parseFloat(detalle.precio_unitario), 0).toFixed(2)}
+                    Q
+                    {factura.detalles
+                      .reduce(
+                        (total, detalle) =>
+                          total + detalle.cantidad * parseFloat(detalle.precio_unitario),
+                        0
+                      )
+                      .toFixed(2)}
                   </td>
                   <td className="p-3 flex gap-2">
-                    <button onClick={() => navigate(`/verfactura/${factura.id}`)} className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded">Ver</button>
-                    <button onClick={() => navigate(`/editarfactura/${factura.id}`)} className="bg-yellow-500 hover:bg-yellow-600 px-2 py-1 rounded">Actualizar</button>
+                    <button
+                      onClick={() => navigate(`/verfactura/${factura.id}`)}
+                      className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
+                    >
+                      Ver
+                    </button>
+                    <button
+                      onClick={() => navigate(`/editarfactura/${factura.id}`)}
+                      className="bg-yellow-500 hover:bg-yellow-600 px-2 py-1 rounded"
+                    >
+                      Actualizar
+                    </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="p-3 text-center text-gray-400">No hay facturas registradas</td>
+                <td colSpan="6" className="p-3 text-center text-gray-400">
+                  No hay facturas registradas
+                </td>
               </tr>
             )}
           </tbody>
