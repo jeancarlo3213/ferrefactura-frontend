@@ -29,7 +29,7 @@ function EditarFactura() {
         setError(error.message);
       }
     };
-    
+
     const fetchProductosDisponibles = async () => {
       try {
         const response = await fetch(`${API_URL}/productos/`, {
@@ -42,24 +42,27 @@ function EditarFactura() {
         setError(error.message);
       }
     };
-    
+
     fetchFactura();
     fetchProductosDisponibles();
   }, [id, token]);
 
-  const eliminarProducto = (productoId) => {
+  const eliminarProducto = async (productoId) => {
     const productoEliminado = productos.find((p) => p.id === productoId);
     setProductos(productos.filter((p) => p.id !== productoId));
-    
-    // Devolver la cantidad eliminada al stock
-    fetch(`${API_URL}/productos/${productoEliminado.producto}/`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${token}`,
-      },
-      body: JSON.stringify({ stock: productoEliminado.cantidad }),
-    });
+
+    try {
+      await fetch(`${API_URL}/productos/${productoEliminado.producto}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
+        },
+        body: JSON.stringify({ stock: productoEliminado.cantidad }),
+      });
+    } catch (error) {
+      console.error("Error al actualizar stock:", error);
+    }
   };
 
   const agregarProducto = (producto) => {
