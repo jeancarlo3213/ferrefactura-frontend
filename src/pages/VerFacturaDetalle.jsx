@@ -138,7 +138,7 @@ function VerFacturaDetalle() {
         <div className="text-center">
           <h2 className="text-lg font-bold">FERRETERÍA EL CAMPESINO</h2>
           <p>Aldea Mediacuesta</p>
-          <p>Tel: +502 57765449</p>
+          <p>Tel: 57765449 - 34567814</p>
         </div>
 
         <div className="mt-2">
