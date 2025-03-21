@@ -19,7 +19,7 @@ import Administrador from "./pages/Administrador";
 import Historial from "./pages/Historial";
 import CajaDiaria from "./pages/CajaDiaria";
 import Deudores from "./pages/Deudores";
-import EditarFactura from "./pages/editarfactura";
+import EditarFactura from "./pages/EditarFactura"; // Asegurar capitalización correcta
 
 const PrivateRoute = ({ element }) => {
   return isAuthenticated() ? element : <Navigate to="/login" />;
