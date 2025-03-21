@@ -20,6 +20,7 @@ import Historial from "./pages/Historial";
 import CajaDiaria from "./pages/CajaDiaria";
 import Deudores from "./pages/Deudores";
 import EditarFactura from "./pages/editarfactura";
+
 const PrivateRoute = ({ element }) => {
   return isAuthenticated() ? element : <Navigate to="/login" />;
 };
@@ -46,7 +47,7 @@ function App() {
         <Route path="/historial" element={<Historial />} />
         <Route path="/caja-diaria" element={<CajaDiaria />} />
         <Route path="/deudores" element={<Deudores />} />
-        <Route path="/editar-factura/:id" element={<EditarFactura />} />
+        <Route path="/editarfactura/:id" element={<EditarFactura />} />
       </Routes>
     </>
   );

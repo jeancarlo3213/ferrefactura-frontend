@@ -11,7 +11,6 @@ function EditarFactura() {
   const [factura, setFactura] = useState(null);
   const [productos, setProductos] = useState([]);
   const [productosDisponibles, setProductosDisponibles] = useState([]);
-  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const token = localStorage.getItem("token");
 
@@ -21,12 +20,12 @@ function EditarFactura() {
         const response = await fetch(`${API_URL}/facturas/${id}/`, {
           headers: { Authorization: `Token ${token}` },
         });
-        if (!response.ok) throw new Error("No se pudo obtener la factura.");
+        if (!response.ok) throw new Error("Error al obtener la factura.");
         const data = await response.json();
         setFactura(data);
         setProductos(data.detalles);
       } catch (error) {
-        setError(error.message);
+        message.error(error.message);
       }
     };
 
@@ -35,11 +34,11 @@ function EditarFactura() {
         const response = await fetch(`${API_URL}/productos/`, {
           headers: { Authorization: `Token ${token}` },
         });
-        if (!response.ok) throw new Error("No se pudieron obtener los productos.");
+        if (!response.ok) throw new Error("Error al obtener los productos.");
         const data = await response.json();
         setProductosDisponibles(data);
       } catch (error) {
-        setError(error.message);
+        message.error(error.message);
       }
     };
 
@@ -47,24 +46,23 @@ function EditarFactura() {
     fetchProductosDisponibles();
   }, [id, token]);
 
-  const eliminarProducto = async (productoId) => {
+  // ✅ Eliminar un producto de la factura y devolverlo al stock
+  const eliminarProducto = (productoId) => {
     const productoEliminado = productos.find((p) => p.id === productoId);
     setProductos(productos.filter((p) => p.id !== productoId));
 
-    try {
-      await fetch(`${API_URL}/productos/${productoEliminado.producto}/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-        body: JSON.stringify({ stock: productoEliminado.cantidad }),
-      });
-    } catch (error) {
-      console.error("Error al actualizar stock:", error);
-    }
+    // Devolver stock al producto eliminado
+    fetch(`${API_URL}/productos/${productoEliminado.producto}/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+      body: JSON.stringify({ stock: productoEliminado.cantidad }),
+    }).catch((err) => console.error(err));
   };
 
+  // ✅ Agregar un producto a la factura
   const agregarProducto = (producto) => {
     if (producto.stock <= 0) {
       message.warning("Este producto no tiene stock disponible.");
@@ -73,6 +71,7 @@ function EditarFactura() {
     setProductos([...productos, { ...producto, cantidad: 1 }]);
   };
 
+  // ✅ Actualizar factura en el backend
   const handleUpdate = async () => {
     if (!factura) return;
     setSubmitting(true);
@@ -84,7 +83,7 @@ function EditarFactura() {
           Authorization: `Token ${token}`,
         },
         body: JSON.stringify({
-          ...factura,
+          nombre_cliente: factura.nombre_cliente,
           detalles: productos.map((p) => ({
             producto_id: p.producto,
             cantidad: p.cantidad,
@@ -92,19 +91,17 @@ function EditarFactura() {
           })),
         }),
       });
-      if (!response.ok) throw new Error("No se pudo actualizar la factura.");
+      if (!response.ok) throw new Error("Error al actualizar la factura.");
       message.success("Factura actualizada correctamente");
       navigate("/facturas");
-    } catch (error) {
-      setError(error.message);
-      message.error("Error al actualizar la factura");
+    } catch {
+      message.error("No se pudo actualizar la factura.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (error) return <p className="text-red-500 text-center">{error}</p>;
-  if (!factura) return <p className="text-center text-white">Cargando factura...</p>;
+  if (!factura) return <p className="text-white text-center">Cargando factura...</p>;
 
   return (
     <div className="p-6 max-w-3xl mx-auto bg-gray-900 text-white rounded-lg shadow-lg">
@@ -117,7 +114,7 @@ function EditarFactura() {
         className="border border-gray-600 bg-gray-800 text-white"
       />
 
-      <label className="block text-sm text-gray-300 mt-4">Productos</label>
+      <h3 className="text-xl font-semibold mt-6">Productos</h3>
       {productos.map((producto) => (
         <div key={producto.id} className="flex justify-between items-center bg-gray-800 p-2 rounded mt-2">
           <span>{producto.producto_nombre} (x{producto.cantidad})</span>
@@ -125,7 +122,7 @@ function EditarFactura() {
         </div>
       ))}
 
-      <label className="block text-sm text-gray-300 mt-4">Agregar Producto</label>
+      <h3 className="text-xl font-semibold mt-6">Agregar Producto</h3>
       {productosDisponibles.map((producto) => (
         <div key={producto.id} className="flex justify-between items-center bg-gray-800 p-2 rounded mt-2">
           <span>{producto.nombre} - Stock: {producto.stock}</span>
@@ -134,17 +131,10 @@ function EditarFactura() {
       ))}
 
       <div className="flex justify-between mt-6">
-        <Button
-          onClick={() => navigate("/facturas")}
-          className="bg-gray-600 text-white px-4 py-2 rounded flex items-center gap-2"
-        >
+        <Button onClick={() => navigate("/facturas")} className="bg-gray-600 text-white px-4 py-2 rounded">
           <FaArrowLeft /> Volver
         </Button>
-        <Button
-          onClick={handleUpdate}
-          className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2"
-          disabled={submitting}
-        >
+        <Button onClick={handleUpdate} className="bg-green-500 text-white px-4 py-2 rounded" disabled={submitting}>
           <FaSave /> {submitting ? "Guardando..." : "Guardar Cambios"}
         </Button>
       </div>
