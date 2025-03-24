@@ -20,20 +20,22 @@ function ListaDeudores() {
   const [deudores, setDeudores] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Estado para modal de ABONAR
+  // ===========
+  // MODALES
+  // ===========
   const [modalVisibleAbonar, setModalVisibleAbonar] = useState(false);
   const [loadingAbono, setLoadingAbono] = useState(false);
   const [selectedDeudor, setSelectedDeudor] = useState(null);
   const [formAbonar] = Form.useForm();
 
-  // Estado para modal de AGREGAR deudor
-  const [modalVisibleAgregar, setModalVisibleAgregar] = useState(false);
-  const [formAgregar] = Form.useForm();
-
-  // Estado para modal de EDITAR deuda
   const [modalVisibleEditar, setModalVisibleEditar] = useState(false);
   const [selectedDeudaEditar, setSelectedDeudaEditar] = useState(null);
   const [formEditar] = Form.useForm();
+
+  // ===========
+  // BÚSQUEDA
+  // ===========
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     fetchDeudores();
@@ -56,7 +58,7 @@ function ListaDeudores() {
   };
 
   // ──────────────────────────────────────────────────────────────
-  // 1) ABONAR UNA DEUDA
+  // ABONAR UNA DEUDA
   // ──────────────────────────────────────────────────────────────
   const handleAbonarDeuda = async (values) => {
     setLoadingAbono(true);
@@ -85,40 +87,21 @@ function ListaDeudores() {
         return;
       }
 
-      // Obtener el último registro de caja
-      const cajaResponse = await axios.get(`${API_URL}/caja-diaria/`, { headers });
-      if (cajaResponse.data.length === 0) {
-        message.error("No hay registros de caja disponibles.");
-        setLoadingAbono(false);
-        return;
-      }
-
-      const ultimaCaja = cajaResponse.data.sort(
-        (a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion)
-      )[0];
-
-      // Datos del abono
-      const pagoData = {
-        deudor: selectedDeudor.deudor, // ID del deudor
-        cantidad_pagada: cantidadAbonada,
-        caja: ultimaCaja.id,
-        comentario:
-          values.comentario ||
-          `Abono de Q${cantidadAbonada} a la deuda de ${selectedDeudor.deudor_nombre}.`
-      };
-
-      // Enviar el abono a la API
-      await axios.post(`${API_URL}/pagos-deudas/`, pagoData, { headers });
-
-      // Actualizar la deuda del deudor en /registros-deudas/
+      // Nueva cantidad después del abono
       const nuevaCantidadDeuda = cantidadDeuda - cantidadAbonada;
+
+      // Actualizar la deuda en /registros-deudas/
+      // Si llega a 0 => Ponemos comentario = "PAGADO"
       await axios.patch(
         `${API_URL}/registros-deudas/${selectedDeudor.id}/`,
-        { cantidad: nuevaCantidadDeuda },
+        {
+          cantidad: nuevaCantidadDeuda,
+          comentario: nuevaCantidadDeuda === 0 ? "PAGADO" : selectedDeudor.comentario
+        },
         { headers }
       );
 
-      // Si la deuda llega a 0, marcar al deudor en /deudores/ como "Pagado"
+      // Si la deuda llega a 0, también marcamos el deudor como "Pagado"
       if (nuevaCantidadDeuda === 0) {
         await axios.patch(
           `${API_URL}/deudores/${selectedDeudor.deudor}/`,
@@ -127,71 +110,18 @@ function ListaDeudores() {
         );
       }
 
-      // Actualizar el último registro de caja
-      const nuevoComentario = `${ultimaCaja.comentario} - Pago de deuda de ${selectedDeudor.deudor_nombre} por Q${cantidadAbonada}`;
-      const cajaActualizada = {
-        cuenta_banco: ultimaCaja.cuenta_banco,
-        efectivo: parseFloat(ultimaCaja.efectivo) + cantidadAbonada,
-        sencillo: ultimaCaja.sencillo,
-        gastos: ultimaCaja.gastos,
-        ingreso_extra: ultimaCaja.ingreso_extra,
-        comentario: nuevoComentario
-      };
-
-      await axios.patch(`${API_URL}/caja-diaria/${ultimaCaja.id}/`, cajaActualizada, { headers });
-
-      message.success("Abono registrado correctamente y caja actualizada.");
+      message.success("Abono registrado correctamente.");
       setModalVisibleAbonar(false);
       fetchDeudores();
     } catch (error) {
-      message.error(
-        error.response?.data?.message || "Error al registrar abono"
-      );
+      console.error("Error al abonar:", error.response?.data);
+      message.error(error.response?.data?.message || "Error al registrar abono");
     }
     setLoadingAbono(false);
   };
 
   // ──────────────────────────────────────────────────────────────
-  // 2) AGREGAR NUEVO DEUDOR (Y SU DEUDA)
-  // ──────────────────────────────────────────────────────────────
-  const handleAgregarDeudor = async (values) => {
-    try {
-      const token = localStorage.getItem("token");
-      const headers = { Authorization: `Token ${token}` };
-
-      // 1) Crear el deudor en la ruta /deudores/
-      const deudorRes = await axios.post(
-        `${API_URL}/deudores/`,
-        { nombre: values.nombre }, // { "nombre": "Don X" }
-        { headers }
-      );
-      const deudorId = deudorRes.data.id; // ID que responde la API
-
-      // 2) Crear el registro de deuda en /registros-deudas/ con ese deudorId
-      await axios.post(
-        `${API_URL}/registros-deudas/`,
-        {
-          deudor: deudorId,
-          descripcion: values.descripcion,
-          cantidad: values.cantidad,
-          comentario: values.comentario || "Pago pendiente"
-        },
-        { headers }
-      );
-
-      message.success("Deudor y deuda creados correctamente.");
-      setModalVisibleAgregar(false);
-      formAgregar.resetFields();
-      fetchDeudores();
-    } catch (error) {
-      message.error(
-        error.response?.data?.message || "Error al crear el deudor"
-      );
-    }
-  };
-
-  // ──────────────────────────────────────────────────────────────
-  // 3) EDITAR UNA DEUDA EXISTENTE (cantidad, descripción, etc.)
+  // EDITAR UNA DEUDA EXISTENTE
   // ──────────────────────────────────────────────────────────────
   const handleEditarDeuda = async (values) => {
     if (!selectedDeudaEditar) return;
@@ -223,7 +153,14 @@ function ListaDeudores() {
   };
 
   // ──────────────────────────────────────────────────────────────
-  // COLUMNA DE LA TABLA
+  // PREPARAR DATOS FILTRADOS POR BÚSQUEDA
+  // ──────────────────────────────────────────────────────────────
+  const filteredDeudores = deudores.filter((item) =>
+    item.deudor_nombre.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  // ──────────────────────────────────────────────────────────────
+  // Columnas de la tabla
   // ──────────────────────────────────────────────────────────────
   const columns = [
     {
@@ -244,7 +181,18 @@ function ListaDeudores() {
     {
       title: "Comentario",
       dataIndex: "comentario",
-      key: "comentario"
+      key: "comentario",
+      render: (text) => (
+        <span
+          style={
+            text === "PAGADO"
+              ? { color: "green", fontWeight: "bold" }
+              : {}
+          }
+        >
+          {text}
+        </span>
+      )
     },
     {
       title: "Estado",
@@ -266,7 +214,7 @@ function ListaDeudores() {
       key: "acciones",
       render: (_, record) => (
         <div style={{ display: "flex", gap: 8 }}>
-          {/* Botón ABONAR (si la deuda no está Pagada) */}
+          {/* Botón ABONAR (solo si la deuda no está Pagada) */}
           {record.estado !== "Pagado" && (
             <Button
               type="primary"
@@ -285,7 +233,7 @@ function ListaDeudores() {
             </Button>
           )}
 
-          {/* Botón EDITAR */}
+          {/* Botón EDITAR (siempre disponible, por si se quiere actualizar la descripción, etc.) */}
           <Button
             type="primary"
             style={{
@@ -312,7 +260,7 @@ function ListaDeudores() {
   ];
 
   // ──────────────────────────────────────────────────────────────
-  // RETURN
+  // RETURN del componente
   // ──────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white p-6">
@@ -323,26 +271,19 @@ function ListaDeudores() {
         ⬅ Volver al Administrador
       </Link>
 
-      {/* Botón para abrir modal de AGREGAR NUEVO DEUDOR */}
-      <Button
-        type="primary"
-        onClick={() => {
-          setModalVisibleAgregar(true);
-          formAgregar.resetFields();
-        }}
-        style={{
-          marginTop: "20px",
-          backgroundColor: "#4CAF50",
-          borderColor: "#45A049",
-          color: "white"
-        }}
-      >
-        ➕ Agregar Deudor
-      </Button>
+      {/* Input de búsqueda */}
+      <div style={{ marginTop: 16, marginBottom: 16 }}>
+        <Input
+          placeholder="Buscar por nombre..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ width: 300 }}
+        />
+      </div>
 
-      <Card className="w-full max-w-6xl mt-6 bg-gray-800 text-white shadow-lg">
+      <Card className="w-full max-w-6xl bg-gray-800 text-white shadow-lg">
         <Table
-          dataSource={deudores}
+          dataSource={filteredDeudores}
           columns={columns}
           loading={loading}
           rowKey="id"
@@ -390,54 +331,7 @@ function ListaDeudores() {
       </Modal>
 
       {/* ──────────────────────────────────────────────────────────────
-          MODAL - AGREGAR NUEVO DEUDOR
-      ────────────────────────────────────────────────────────────── */}
-      <Modal
-        title="➕ Agregar Deudor"
-        open={modalVisibleAgregar}
-        onCancel={() => setModalVisibleAgregar(false)}
-        footer={null}
-      >
-        <Form form={formAgregar} onFinish={handleAgregarDeudor} layout="vertical">
-          <Form.Item
-            name="nombre"
-            label="Nombre del Deudor"
-            rules={[{ required: true, message: "Ingrese el nombre del deudor" }]}
-          >
-            <Input placeholder="Ej: Juan Pérez" />
-          </Form.Item>
-          <Form.Item
-            name="descripcion"
-            label="Descripción de la Deuda"
-            rules={[{ required: true, message: "Ingrese la descripción" }]}
-          >
-            <Input placeholder="Ej: 10 botes de pintura" />
-          </Form.Item>
-          <Form.Item
-            name="cantidad"
-            label="Monto de la Deuda"
-            rules={[{ required: true, message: "Ingrese un monto" }]}
-          >
-            <Input type="number" min="1" step="1" placeholder="Ej: 200" />
-          </Form.Item>
-          <Form.Item
-            name="comentario"
-            label="Comentario (Opcional)"
-          >
-            <Input.TextArea placeholder="Ej: Pagará a fin de mes" />
-          </Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            style={{ backgroundColor: "#008000", borderColor: "#006400", color: "white" }}
-          >
-            Guardar
-          </Button>
-        </Form>
-      </Modal>
-
-      {/* ──────────────────────────────────────────────────────────────
-          MODAL - EDITAR DEUDA EXISTENTE
+          MODAL - EDITAR DEUDA
       ────────────────────────────────────────────────────────────── */}
       <Modal
         title="✏️ Editar Deuda"
@@ -451,26 +345,31 @@ function ListaDeudores() {
             label="Monto de la Deuda"
             rules={[{ required: true, message: "Ingrese un monto" }]}
           >
-            <Input type="number" min="1" step="1" placeholder="Ej: 300" />
+            <Input type="number" min="1" step="1" />
           </Form.Item>
           <Form.Item
             name="descripcion"
             label="Descripción"
-            rules={[{ required: true, message: "Ingrese una descripción" }]}
+            rules={[{ required: true, message: "Ingrese la descripción" }]}
           >
-            <Input placeholder="Ej: 5 sacos de cemento" />
+            <Input />
           </Form.Item>
           <Form.Item
             name="comentario"
             label="Comentario"
             rules={[{ required: true, message: "Ingrese un comentario" }]}
           >
-            <Input.TextArea placeholder="Ej: Deuda pendiente de la semana pasada" />
+            <Input.TextArea />
           </Form.Item>
           <Button
             type="primary"
             htmlType="submit"
-            style={{ backgroundColor: "#008000", borderColor: "#006400", color: "white" }}
+            style={{
+              backgroundColor: "#008000",
+              borderColor: "#006400",
+              color: "white"
+            }}
+            className="mt-2 w-full"
           >
             Guardar Cambios
           </Button>
