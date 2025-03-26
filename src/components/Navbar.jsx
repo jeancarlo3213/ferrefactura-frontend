@@ -1,26 +1,30 @@
-// src/components/Navbar.jsx
 import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { isAuthenticated, logout } from "../api/auth";
-import "@/styles/navbar.css"; // Asegúrate de importar tu CSS donde definiremos la clase .no-print
+import "@/styles/navbar.css"; 
 
 function Navbar() {
   const navigate = useNavigate();
+  const [authenticated, setAuthenticated] = useState(isAuthenticated());
+
+  useEffect(() => {
+    const handleStorageChange = () => setAuthenticated(isAuthenticated());
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    setAuthenticated(false);
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   return (
-    // Agregamos className="navbar no-print"
     <nav className="navbar no-print">
       <Link to="/">Inicio</Link>
-      {isAuthenticated() ? (
-        <>
-          <Link to="/dashboard">Dashboard</Link>
-          <button
-            onClick={() => {
-              logout();
-              navigate("/login");
-            }}
-          >
-            Cerrar sesión
-          </button>
-        </>
+      {authenticated ? (
+        <button onClick={handleLogout}>Cerrar sesión</button>
       ) : (
         <Link to="/login">Iniciar sesión</Link>
       )}
