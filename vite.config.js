@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
@@ -13,5 +12,14 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
+  },
+  server: {
+    historyApiFallback: true, // Evita errores 404 en recargas
+    host: true,
+    port: 3000, // Asegura que el frontend se ejecute correctamente
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
   },
 });
