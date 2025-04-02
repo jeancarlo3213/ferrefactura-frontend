@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { format } from "date-fns";
+import "../styles/facturasview.css";
 
 function Facturas() {
   const [facturas, setFacturas] = useState([]);
@@ -12,23 +13,19 @@ function Facturas() {
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Obtener facturas
   const fetchFacturas = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No hay token de autenticación.");
 
       const response = await fetch(`${API_URL}/facturas/`, {
-        method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Token ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error("No se pudieron obtener las facturas.");
-      }
+      if (!response.ok) throw new Error("No se pudieron obtener las facturas.");
       const data = await response.json();
       setFacturas(data);
     } catch (err) {
@@ -40,7 +37,6 @@ function Facturas() {
     fetchFacturas();
   }, []);
 
-  // Filtrar facturas por nombre de cliente y fecha
   const filteredFacturas = facturas.filter((factura) => {
     const matchesClient = factura.nombre_cliente
       .toLowerCase()
@@ -52,7 +48,6 @@ function Facturas() {
     return matchesClient && matchesDate;
   });
 
-  // Resetear filtros
   const resetFilters = () => {
     setSearchTerm("");
     setStartDate("");
@@ -60,82 +55,75 @@ function Facturas() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <h2 className="text-3xl font-bold text-center mb-4">Gestión de Facturas</h2>
+    <div className="facturas-container">
+      <div className="logo-wrapper">
+        <img src="/Logo.jpeg" alt="Logo" className="logo-hero animate-bounce" />
+      </div>
+
+      <h2 className="facturas-title">Gestión de Facturas</h2>
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
-      {/* Botón para Crear Factura */}
       <div className="flex justify-center mb-4">
         <button
           onClick={() => navigate("/crearfactura")}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2"
+          className="btn-crear-factura"
         >
           <Plus size={18} /> Crear Factura
         </button>
       </div>
 
-      {/* Filtros de búsqueda */}
-      <div className="flex flex-wrap gap-2 justify-center mb-6">
+      <div className="filtros-container">
         <input
           type="text"
           placeholder="Buscar por cliente"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="p-2 bg-gray-800 text-white rounded w-64"
+          className="filtro-input"
         />
         <input
           type="date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          className="p-1 bg-gray-800 text-white rounded w-40"
+          className="filtro-input"
         />
         <input
           type="date"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
-          className="p-1 bg-gray-800 text-white rounded w-40"
+          className="filtro-input"
         />
-        <button
-          onClick={resetFilters}
-          className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
-        >
+        <button onClick={resetFilters} className="btn-borrar">
           Borrar Filtros
         </button>
       </div>
 
-      {/* Tabla de Facturas */}
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-left border border-gray-700 rounded-lg overflow-hidden">
-          <thead className="bg-gray-800 text-white uppercase">
+      <div className="facturas-table-container">
+        <table className="facturas-table">
+          <thead>
             <tr>
-              <th className="p-3">ID</th>
-              <th className="p-3">Fecha</th>
-              <th className="p-3">Cliente</th>
-              <th className="p-3">Productos</th>
-              <th className="p-3">Subtotal</th>
-              <th className="p-3">Acciones</th>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Productos</th>
+              <th>Subtotal</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredFacturas.length > 0 ? (
               filteredFacturas.map((factura) => (
-                <tr
-                  key={factura.id}
-                  className="border-b border-gray-700 hover:bg-gray-800 transition"
-                >
-                  <td className="p-3">{factura.id}</td>
-                  <td className="p-3">
-                    {format(new Date(factura.fecha_creacion), "dd/MM/yyyy, p")}
-                  </td>
-                  <td className="p-3">{factura.nombre_cliente}</td>
-                  <td className="p-3">
+                <tr key={factura.id}>
+                  <td>{factura.id}</td>
+                  <td>{format(new Date(factura.fecha_creacion), "dd/MM/yyyy, p")}</td>
+                  <td>{factura.nombre_cliente}</td>
+                  <td>
                     {factura.detalles.map((detalle) => (
                       <div key={detalle.id}>
                         {detalle.producto_nombre} (x{detalle.cantidad})
                       </div>
                     ))}
                   </td>
-                  <td className="p-3">
+                  <td>
                     Q
                     {factura.detalles
                       .reduce(
@@ -145,16 +133,16 @@ function Facturas() {
                       )
                       .toFixed(2)}
                   </td>
-                  <td className="p-3 flex gap-2">
+                  <td className="flex gap-2">
                     <button
                       onClick={() => navigate(`/verfactura/${factura.id}`)}
-                      className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
+                      className="btn-ver"
                     >
                       Ver
                     </button>
                     <button
                       onClick={() => navigate(`/editarfactura/${factura.id}`)}
-                      className="bg-yellow-500 hover:bg-yellow-600 px-2 py-1 rounded"
+                      className="btn-actualizar"
                     >
                       Actualizar
                     </button>
@@ -163,7 +151,7 @@ function Facturas() {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="p-3 text-center text-gray-400">
+                <td colSpan="6" className="text-center text-gray-400 py-4">
                   No hay facturas registradas
                 </td>
               </tr>

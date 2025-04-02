@@ -1,13 +1,25 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-// Ant Design
-import { Input, Button, message } from "antd";
-// React Icons
-import { FaPlus, FaCheckCircle, FaSearch, FaTrash } from "react-icons/fa";
+import {
+  Input,
+  Button,
+  Steps,
+  message,
+  Modal,
+  Form,
+  InputNumber,
+} from "antd";
+import { FaPlus, FaCheckCircle, FaTrash } from "react-icons/fa";
+import "../styles/facturas.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const { Step } = Steps;
 
 function CrearFactura() {
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  const [currentStep, setCurrentStep] = useState(0);
   const [productos, setProductos] = useState([]);
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
   const [nombreCliente, setNombreCliente] = useState("");
@@ -15,258 +27,125 @@ function CrearFactura() {
   const [costoEnvio, setCostoEnvio] = useState(0);
   const [descuentoTotal, setDescuentoTotal] = useState(0);
   const [totalFactura, setTotalFactura] = useState(0);
-
-  const [loadingProductos, setLoadingProductos] = useState(true); // Para mostrar "Cargando..."
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false); // Evita doble clic en "Confirmar"
-
-  // Estado para la búsqueda
   const [busqueda, setBusqueda] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [form] = Form.useForm();
 
-  // Para redirigir tras crear la factura
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-
-  // -------------------------------------------------------------------
-  // 1) Cargar productos desde el backend
-  // -------------------------------------------------------------------
   useEffect(() => {
-    const fetchProductos = async () => {
-      setLoadingProductos(true);
-      setError(""); // Limpiamos cualquier error previo
-      try {
-        const response = await fetch(`${API_URL}/productos/`, {
-          headers: { Authorization: `Token ${token}` },
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            throw new Error("No autorizado. Verifica tu sesión.");
-          } else {
-            throw new Error("Error al obtener los productos.");
-          }
-        }
-        const data = await response.json();
-
-        const productosProcesados = data.map((producto) => {
-          const unidadesPorQuintal = producto.unidades_por_quintal || 1;
-
-          return {
-            ...producto,
-            precio: parseFloat(producto.precio) || 0,
-            precio_quintal: producto.precio_quintal
-              ? parseFloat(producto.precio_quintal)
-              : null,
-            descuentoPorUnidad: 0, // Valor inicial para el descuento
-            // Estos campos son opcionales para la lógica de stock
-            stockQuintales: producto.unidades_por_quintal
-              ? Math.floor(producto.stock / unidadesPorQuintal)
-              : null,
-            unidadesRestantes: producto.unidades_por_quintal
-              ? producto.stock % unidadesPorQuintal
-              : producto.stock,
-          };
-        });
-
-        setProductos(productosProcesados);
-      } catch (err) {
-        console.error(err);
-        setError(err.message || "Error al obtener los productos.");
-      } finally {
-        setLoadingProductos(false);
-      }
-    };
-
-    fetchProductos();
+    fetch(`${API_URL}/productos/`, {
+      headers: { Authorization: `Token ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const procesados = data.map((p) => ({
+          ...p,
+          precio: parseFloat(p.precio),
+          precio_quintal: p.precio_quintal ? parseFloat(p.precio_quintal) : null,
+          descuentoPorUnidad: 0,
+        }));
+        setProductos(procesados);
+      });
   }, [token]);
 
-  // -------------------------------------------------------------------
-  // 2) Calcular total de la factura
-  // -------------------------------------------------------------------
   const calcularTotal = useCallback(() => {
-    const totalProductos = productosSeleccionados.reduce((acc, p) => {
-      // Precio por quintales
-      const costQuintales = p.cantidadQuintales * (p.precio_quintal || 0);
-
-      // Precio por unidades
-      const costUnidades = p.cantidadUnidades * (p.precio || 0);
-
-      // Descuento solo aplica a las unidades
-      const discount = p.descuentoPorUnidad * p.cantidadUnidades;
-
-      return acc + costQuintales + costUnidades - discount;
+    const total = productosSeleccionados.reduce((acc, p) => {
+      const totalQ = (p.precio_quintal || 0) * p.cantidadQuintales;
+      const totalU = p.precio * p.cantidadUnidades;
+      const descuento = p.descuentoPorUnidad * p.cantidadUnidades;
+      return acc + totalQ + totalU - descuento;
     }, 0);
 
-    const total =
-      totalProductos +
-      (parseFloat(costoEnvio) || 0) -
-      (parseFloat(descuentoTotal) || 0);
-
-    setTotalFactura(total);
+    setTotalFactura(total + Number(costoEnvio || 0) - Number(descuentoTotal || 0));
   }, [productosSeleccionados, costoEnvio, descuentoTotal]);
 
-  // Llamamos a calcularTotal cada vez que algo cambie
   useEffect(() => {
     calcularTotal();
   }, [productosSeleccionados, costoEnvio, descuentoTotal, calcularTotal]);
 
-  // -------------------------------------------------------------------
-  // 3) Quitar producto de los seleccionados
-  // -------------------------------------------------------------------
+  const agregarProducto = (p) => {
+    if (p.stock <= 0) return message.warning("Sin stock disponible");
+    if (productosSeleccionados.find((prod) => prod.id === p.id)) {
+      return message.info("Este producto ya está en la lista");
+    }
+    setProductosSeleccionados((prev) => [
+      ...prev,
+      { ...p, cantidadQuintales: 0, cantidadUnidades: 0 },
+    ]);
+    message.success("Producto agregado");
+  };
+
   const quitarProducto = (id) => {
     setProductosSeleccionados((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // -------------------------------------------------------------------
-  // 4) Modificar la cantidad (quintales o unidades)
-  // -------------------------------------------------------------------
   const modificarCantidad = (id, campo, valor) => {
     setProductosSeleccionados((prev) =>
       prev.map((p) => {
-        if (p.id === id) {
-          let nuevoValor = parseFloat(valor) || 0;
-          if (nuevoValor < 0) return p; // Evitamos valores negativos
+        if (p.id !== id) return p;
+        const nuevoValor = parseFloat(valor) || 0;
 
-          // Si este producto maneja quintales y el usuario intenta poner
-          // "cantidadUnidades" >= (unidades_por_quintal)
-          // le sugerimos mejor usar un quintal
-          if (
-            campo === "cantidadUnidades" &&
-            p.precio_quintal !== null &&
-            p.unidades_por_quintal &&
-            nuevoValor >= p.unidades_por_quintal
-          ) {
-            message.warning(
-              "Para solicitar tantas unidades, selecciona un quintal en su lugar."
-            );
-            return p; // No actualiza
-          }
+        const unPorQ = p.unidades_por_quintal || 1;
+        const totalUnidades =
+          (campo === "cantidadQuintales" ? nuevoValor : p.cantidadQuintales) *
+            unPorQ +
+          (campo === "cantidadUnidades" ? nuevoValor : p.cantidadUnidades);
 
-          let { cantidadQuintales, cantidadUnidades } = p;
-          if (campo === "cantidadQuintales") {
-            cantidadQuintales = nuevoValor;
-          } else if (campo === "cantidadUnidades") {
-            cantidadUnidades = nuevoValor;
-          }
-
-          // total de unidades usando quintales
-          const unidadesPorQuintal = p.unidades_por_quintal || 1;
-          const totalUnidadesQuintal = p.precio_quintal
-            ? cantidadQuintales * unidadesPorQuintal
-            : 0;
-          const totalNecesarias = totalUnidadesQuintal + cantidadUnidades;
-
-          // Revisar si no excede el stock (en varillas)
-          if (totalNecesarias > p.stock) {
-            message.warning("No hay suficiente stock para esa cantidad.");
-            return p; // No actualiza
-          }
-
-          return { ...p, cantidadQuintales, cantidadUnidades };
+        if (totalUnidades > p.stock) {
+          message.warning("Excede el stock disponible");
+          return p;
         }
-        return p;
+
+        if (
+          campo === "cantidadUnidades" &&
+          p.precio_quintal &&
+          p.unidades_por_quintal &&
+          nuevoValor >= p.unidades_por_quintal
+        ) {
+          message.warning("Usa un quintal en lugar de tantas unidades");
+          return p;
+        }
+
+        return { ...p, [campo]: nuevoValor };
       })
     );
-    calcularTotal();
   };
 
-  // -------------------------------------------------------------------
-  // 5) Modificar descuento por unidad
-  // -------------------------------------------------------------------
-  const modificarDescuento = (id, valor) => {
-    const nuevoDescuento = parseFloat(valor) || 0;
-    setProductosSeleccionados((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, descuentoPorUnidad: nuevoDescuento } : p
-      )
-    );
-    calcularTotal();
-  };
-
-  // -------------------------------------------------------------------
-  // 6) Agregar producto a la lista de seleccionados
-  // -------------------------------------------------------------------
-  const agregarProducto = (producto) => {
-    if (producto.stock <= 0) {
-      message.warning("Este producto no tiene stock disponible.");
-      return;
-    }
-    setProductosSeleccionados((prev) => {
-      const existe = prev.find((p) => p.id === producto.id);
-      if (existe) {
-        return prev; // ya existe
-      } else {
-        return [
-          ...prev,
-          {
-            ...producto,
-            cantidadQuintales: 0,
-            cantidadUnidades: 0,
-            descuentoPorUnidad: 0,
-          },
-        ];
-      }
-    });
-    calcularTotal();
-  };
-
-  // -------------------------------------------------------------------
-  // 7) Confirmar Factura
-  // -------------------------------------------------------------------
   const confirmarFactura = async () => {
-    // Validaciones básicas
-    if (!nombreCliente.trim()) {
-      message.error("Falta el nombre del cliente.");
-      return;
-    }
-    if (!fechaEntrega) {
-      message.error("Falta la fecha de entrega.");
-      return;
-    }
-    if (productosSeleccionados.length === 0) {
-      message.error("Debes seleccionar al menos un producto.");
-      return;
-    }
+    if (!nombreCliente.trim()) return message.error("Nombre del cliente requerido");
+    if (!fechaEntrega) return message.error("Fecha de entrega requerida");
+    if (productosSeleccionados.length === 0)
+      return message.error("Debes agregar al menos un producto");
 
-    setSubmitting(true);
-
-    // Armado del payload de la factura:
-    // 🔸 Creamos múltiples líneas si hay quintales y unidades.
     const payload = {
       nombre_cliente: nombreCliente,
       fecha_entrega: fechaEntrega,
       costo_envio: costoEnvio,
       descuento_total: descuentoTotal,
-      usuario_id: 1, // Ajustar según tu backend
+      usuario_id: 1,
       productos: [],
     };
 
-    // Recorremos cada producto seleccionado
-    productosSeleccionados.forEach((prod) => {
-      const unidadesPorQuintal = prod.unidades_por_quintal || 1;
-
-      // Si se compraron quintales, creamos la línea para quintales
-      if (prod.cantidadQuintales > 0) {
+    productosSeleccionados.forEach((p) => {
+      if (p.cantidadQuintales > 0) {
         payload.productos.push({
-          producto_id: prod.id,
-          cantidad: prod.cantidadQuintales, // Cuántos quintales
-          precio_unitario: prod.precio_quintal, // Precio por quintal
+          producto_id: p.id,
+          cantidad: p.cantidadQuintales,
+          precio_unitario: p.precio_quintal,
         });
       }
-
-      // Si se compraron unidades, creamos la línea para unidades
-      if (prod.cantidadUnidades > 0) {
+      if (p.cantidadUnidades > 0) {
         payload.productos.push({
-          producto_id: prod.id,
-          cantidad: prod.cantidadUnidades, // Cuántas unidades
-          precio_unitario: prod.precio, // Precio unitario
+          producto_id: p.id,
+          cantidad: p.cantidadUnidades,
+          precio_unitario: p.precio,
         });
       }
     });
 
+    setSubmitting(true);
     try {
-      // 7.1) Crear la factura en el servidor
-      const responseFactura = await fetch(`${API_URL}/facturas/`, {
+      const res = await fetch(`${API_URL}/facturas/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -275,265 +154,248 @@ function CrearFactura() {
         body: JSON.stringify(payload),
       });
 
-      if (!responseFactura.ok) {
-        throw new Error("Error al crear la factura en el servidor.");
-      }
-
-      const dataFactura = await responseFactura.json();
-
-      // 7.2) Actualizar stock de cada producto
-      //     Tenemos que restar la cantidad total de varillas del stock
-      const stockUpdatePromises = productosSeleccionados.map(async (prodSel) => {
-        const unPorQ = prodSel.unidades_por_quintal || 1;
-
-        // Convertir a varillas
-        const totalUnidadesQuintal = prodSel.cantidadQuintales * unPorQ;
-        const totalUnidadesConsumidas =
-          totalUnidadesQuintal + prodSel.cantidadUnidades;
-
-        // Restar al stock (en varillas)
-        const nuevoStock = prodSel.stock - totalUnidadesConsumidas;
-
-        // PATCH al producto con el nuevo stock
-        const responseStock = await fetch(
-          `${API_URL}/productos/${prodSel.id}/`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Token ${token}`,
-            },
-            body: JSON.stringify({ stock: nuevoStock }),
-          }
-        );
-
-        if (!responseStock.ok) {
-          throw new Error(
-            `Error al actualizar stock del producto ${prodSel.nombre}.`
-          );
-        }
-      });
-
-      await Promise.all(stockUpdatePromises);
-
-      // Factura creada con éxito
-      message.success(`¡Factura creada con éxito! ID: ${dataFactura.id}`, 3);
-      navigate(`/verfactura/${dataFactura.id}`);
-    } catch (error) {
-      console.error(error);
-      message.error(`Error: ${error.message}`);
+      if (!res.ok) throw new Error("Error al guardar factura");
+      const data = await res.json();
+      message.success("Factura creada");
+      navigate(`/verfactura/${data.id}`);
+    } catch (err) {
+      message.error(err.message);
+    } finally {
       setSubmitting(false);
     }
   };
 
-  // -------------------------------------------------------------------
-  // 8) Render principal
-  // -------------------------------------------------------------------
-  if (loadingProductos) {
-    return (
-      <p className="text-center text-white">Cargando productos...</p>
-    );
-  }
+  const pasos = [
+    {
+      title: "Cliente",
+      content: (
+        <div className="flex justify-center gap-6 animate-fade-in">
+          <div className="flex flex-col items-start">
+            <label className="font-bold mb-1">Nombre del Cliente</label>
+            <Input
+              className="rounded-xl w-64"
+              value={nombreCliente}
+              onChange={(e) => setNombreCliente(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col items-start">
+            <label className="font-bold mb-1">Fecha de Entrega</label>
+            <Input
+              type="date"
+              className="rounded-xl w-64"
+              value={fechaEntrega}
+              onChange={(e) => setFechaEntrega(e.target.value)}
+            />
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Productos",
+      content: (
+        <div className="animate-fade-in">
+          <div className="flex justify-center gap-4 mb-4">
+            <Input
+              placeholder="Buscar producto..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="productos-search"
+            />
+            <Button onClick={() => setModalVisible(true)}>+ Nuevo Producto</Button>
+          </div>
+          <div className="space-y-4">
+            {productos
+              .filter((p) =>
+                p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+              )
+              .map((p) => (
+                <div
+                  key={p.id}
+                  className="flex justify-between items-center p-4 rounded-xl bg-gray-800 shadow-lg hover:scale-[1.01] transition-transform"
+                >
+                  <div>
+                    <p className="font-bold">{p.nombre}</p>
+                    <p>Q{p.precio} unidad</p>
+                    {p.precio_quintal && <p>Q{p.precio_quintal} por quintal</p>}
+                    <p>Stock: {p.stock}</p>
+                  </div>
+                  <Button
+                    icon={<FaPlus />}
+                    className="btn-agregar"
+                    onClick={() => agregarProducto(p)}
+                  >
+                    Agregar
+                  </Button>
+                </div>
+              ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Resumen",
+      content: (
+        <div className="space-y-6 animate-fade-in">
+          {productosSeleccionados.map((p) => {
+            const total =
+              (p.precio_quintal || 0) * p.cantidadQuintales +
+              p.precio * p.cantidadUnidades -
+              (p.descuentoPorUnidad || 0) * p.cantidadUnidades;
 
-  if (error) {
-    return <p className="text-red-500 text-center">{error}</p>;
-  }
+            return (
+              <div
+                key={p.id}
+                className="p-4 bg-gray-800 rounded-xl shadow-md space-y-2"
+              >
+                <h3 className="text-lg font-bold text-center">{p.nombre}</h3>
+                <div className="flex justify-center gap-4">
+                  {p.precio_quintal && (
+                    <div>
+                      <label className="block text-sm mb-1">
+                        Cantidad x Quintal
+                      </label>
+                      <Input
+                        type="number"
+                        className="!w-28"
+                        value={p.cantidadQuintales}
+                        onChange={(e) =>
+                          modificarCantidad(p.id, "cantidadQuintales", e.target.value)
+                        }
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm mb-1">
+                      Cantidad x Unidad
+                    </label>
+                    <Input
+                      type="number"
+                      className="!w-28"
+                      value={p.cantidadUnidades}
+                      onChange={(e) =>
+                        modificarCantidad(p.id, "cantidadUnidades", e.target.value)
+                      }
+                    />
+                  </div>
+                  <Button
+                    icon={<FaTrash />}
+                    danger
+                    onClick={() => quitarProducto(p.id)}
+                    className="self-end"
+                  />
+                </div>
+                <p className="text-center font-medium">Total: Q{total.toFixed(2)}</p>
+              </div>
+            );
+          })}
 
-  return (
-    <div className="p-6 max-w-5xl mx-auto bg-gray-900 text-white rounded-lg shadow-lg">
-      {/* Título principal */}
-      <h1 className="text-3xl font-bold text-center mb-6">
-        FERRETERÍA EL CAMPESINO
-      </h1>
-
-      {/* Campos para Cliente, Fecha, Costo de Envío, etc. */}
-      <div className="space-y-3">
-        <label className="block text-sm text-gray-300">Nombre del Cliente</label>
-        <Input
-          value={nombreCliente}
-          onChange={(e) => setNombreCliente(e.target.value)}
-          className="border border-gray-600 !bg-gray-800 !text-white"
-          placeholder="Ej: Juan Pérez"
-        />
-
-        <label className="block text-sm text-gray-300">Fecha de Entrega</label>
-        <Input
-          type="date"
-          value={fechaEntrega}
-          onChange={(e) => setFechaEntrega(e.target.value)}
-          className="border border-gray-600 !bg-gray-800 !text-white"
-        />
-
-        <label className="block text-sm text-gray-300">Costo de Envío</label>
-        <Input
-          type="number"
-          value={costoEnvio}
-          onChange={(e) => setCostoEnvio(Number(e.target.value))}
-          className="border border-gray-600 !bg-gray-800 !text-white"
-          placeholder="Ej: 50"
-        />
-
-        <label className="block text-sm text-gray-300">Descuento Total</label>
-        <Input
-          type="number"
-          value={descuentoTotal}
-          onChange={(e) => setDescuentoTotal(Number(e.target.value))}
-          className="border border-gray-600 !bg-gray-800 !text-white"
-          placeholder="Ej: 10"
-        />
-      </div>
-
-      {/* Lista de Productos Seleccionados */}
-      <h2 className="text-xl font-semibold mt-6 mb-2">
-        Lista de Productos Seleccionados
-      </h2>
-      {productosSeleccionados.map((p) => (
-        <div
-          key={p.id}
-          className="flex justify-between items-center p-3 border-b border-gray-700"
-        >
-          <span className="flex-1">{p.nombre}</span>
-
-          {/* Cantidad por Quintal (si aplica) */}
-          {p.precio_quintal !== null && (
-            <div className="text-center mx-2">
-              <span className="block text-sm text-gray-400">
-                Cantidad Quintales
-              </span>
+          <div className="flex justify-center gap-6">
+            <div>
+              <label className="font-semibold">Descuento Total (Q)</label>
               <Input
                 type="number"
-                value={p.cantidadQuintales}
-                onChange={(e) =>
-                  modificarCantidad(p.id, "cantidadQuintales", e.target.value)
-                }
-                className="!w-16 !border-gray-600 !bg-gray-800 !text-white text-center"
-                placeholder="0"
+                value={descuentoTotal}
+                onChange={(e) => setDescuentoTotal(Number(e.target.value))}
               />
             </div>
-          )}
-
-          {/* Cantidad por Unidad */}
-          <div className="text-center mx-2">
-            <span className="block text-sm text-gray-400">
-              Cantidad Unidades
-            </span>
-            <Input
-              type="number"
-              value={p.cantidadUnidades}
-              onChange={(e) =>
-                modificarCantidad(p.id, "cantidadUnidades", e.target.value)
-              }
-              className="!w-16 !border-gray-600 !bg-gray-800 !text-white text-center"
-              placeholder="0"
-            />
+            <div>
+              <label className="font-semibold">Costo de Envío (Q)</label>
+              <Input
+                type="number"
+                value={costoEnvio}
+                onChange={(e) => setCostoEnvio(Number(e.target.value))}
+              />
+            </div>
           </div>
 
-          {/* Descuento por Unidad */}
-          <div className="text-center mx-2">
-            <span className="block text-sm text-gray-400">
-              Descuento por Unidad
-            </span>
-            <Input
-              type="number"
-              value={p.descuentoPorUnidad}
-              onChange={(e) => modificarDescuento(p.id, e.target.value)}
-              className="!w-16 !border-gray-600 !bg-gray-800 !text-white text-center"
-              placeholder="0"
-            />
-          </div>
-
-          {/* Total por producto (para mostrar en pantalla, no en DB) */}
-          <span className="font-bold mx-2">
-            {(() => {
-              const costQ = p.cantidadQuintales * (p.precio_quintal || 0);
-              const costU = p.cantidadUnidades * (p.precio || 0);
-              const discount = p.descuentoPorUnidad * p.cantidadUnidades;
-              const subtotal = costQ + costU - discount;
-              return `Total: Q${subtotal.toFixed(2)}`;
-            })()}
-          </span>
-
-          {/* Botón para quitar producto */}
-          <Button
-            type="ghost"
-            icon={<FaTrash />}
-            onClick={() => quitarProducto(p.id)}
-            className="!border-none text-red-400 hover:text-red-600"
-          />
+          <h2 className="text-center text-xl font-bold mt-4">
+            Total: Q{totalFactura.toFixed(2)}
+          </h2>
         </div>
-      ))}
+      ),
+    },
+  ];
 
-      {/* Búsqueda de productos */}
-      <div className="mt-6">
-        <label className="block text-sm text-gray-300 mb-1">
-          <FaSearch className="inline mr-2" />
-          Buscar producto (por nombre o ID)
-        </label>
-        <Input
-          type="text"
-          className="border border-gray-600 !bg-gray-800 !text-white"
-          placeholder="Ej: Pintura o 1"
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+  return (
+    <div className="productos-container">
+      <div className="logo-wrapper">
+        <img src="/Logo.jpeg" alt="Logo" className="logo-hero" />
       </div>
 
-      {/* Lista de Productos Disponibles */}
-      <h2 className="text-xl font-semibold mt-4 mb-2">
-        Lista de Productos Disponibles
-      </h2>
-      {productos
-        .filter((prod) => {
-          if (!busqueda || !busqueda.trim()) return true;
-          const texto = busqueda.toLowerCase();
-          return (
-            prod.nombre.toLowerCase().includes(texto) ||
-            String(prod.id).includes(texto)
-          );
-        })
-        .map((producto) => (
-          <div
-            key={producto.id}
-            className="flex justify-between items-center p-3 border-b border-gray-700"
+      <Steps
+        current={currentStep}
+        items={pasos.map((p) => ({ title: p.title }))}
+        className="mb-6"
+      />
+
+      <div className="bg-gray-900 p-6 rounded-xl shadow-lg w-full">
+        {pasos[currentStep].content}
+      </div>
+
+      <div className="flex justify-between mt-6 w-full">
+        {currentStep > 0 && (
+          <Button onClick={() => setCurrentStep(currentStep - 1)}>Regresar</Button>
+        )}
+        {currentStep < pasos.length - 1 ? (
+          <Button type="primary" onClick={() => setCurrentStep(currentStep + 1)}>
+            Siguiente
+          </Button>
+        ) : (
+          <Button
+            type="primary"
+            icon={<FaCheckCircle />}
+            loading={submitting}
+            onClick={confirmarFactura}
           >
-            <span>
-              {producto.nombre} - Q
-              {producto.precio.toFixed(2)}
-            </span>
-            {producto.precio_quintal && (
-              <span>
-                Q
-                {producto.precio_quintal.toFixed(2)} por quintal
-              </span>
-            )}
-            <span>Stock: {producto.stock > 0 ? producto.stock : 0} unidades</span>
+            Confirmar
+          </Button>
+        )}
+      </div>
 
-            <Button
-              type="default"
-              icon={<FaPlus />}
-              onClick={() => agregarProducto(producto)}
-              className="bg-blue-500 text-white border-none hover:bg-blue-600"
-              disabled={producto.stock <= 0}
-            >
-              Agregar
-            </Button>
-          </div>
-        ))}
-
-      {/* Total Final */}
-      <h2 className="text-xl font-semibold mt-6">
-        Total: Q{totalFactura.toFixed(2)}
-      </h2>
-
-      {/* Botón Confirmar Factura */}
-      <Button
-        type="primary"
-        icon={<FaCheckCircle />}
-        className="w-full !bg-green-500 !border-none hover:!bg-green-600"
-        disabled={productosSeleccionados.length === 0 || submitting}
-        onClick={confirmarFactura}
+      <Modal
+        title="Agregar Nuevo Producto"
+        open={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onOk={() => {
+          form.validateFields().then(async (values) => {
+            const res = await fetch(`${API_URL}/productos/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Token ${token}`,
+              },
+              body: JSON.stringify(values),
+            });
+            const nuevo = await res.json();
+            setProductos((prev) => [...prev, nuevo]);
+            form.resetFields();
+            setModalVisible(false);
+            message.success("Producto creado");
+          });
+        }}
       >
-        {submitting ? "Enviando..." : "Confirmar Factura"}
-      </Button>
+        <Form layout="vertical" form={form}>
+          <Form.Item name="nombre" label="Nombre" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="precio"
+            label="Precio por unidad"
+            rules={[{ required: true }]}
+          >
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item name="precio_quintal" label="Precio por quintal">
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item name="unidades_por_quintal" label="Unidades por quintal">
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item name="stock" label="Stock" rules={[{ required: true }]}>
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
