@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================== */
+/* CONTENEDOR PRINCIPAL          */
+/* ============================== */
+.productos-container {
+  @apply flex flex-col items-center min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white p-8;
+}
+
+.productos-title {
+  @apply text-4xl font-extrabold mb-8 text-center text-blue-400 drop-shadow-lg;
+}
+
+/* ============================== */
+/* LOGO CON ANIMACIÓN            */
+/* ============================== */
+.logo-container {
+  @apply mb-4 flex justify-center w-full;
+}
+
+.logo {
+  width: 180px;
+  height: 180px;
+  border-radius: 9999px;
+  object-fit: cover; /* usamos cover para que llene el círculo */
+  background-color: #0f172a;
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
+  border: 4px solid #1e40af;
+  transform: translateX(-30px); /* desplaza hacia la izquierda */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s;
+}
+.logo-wrapper {
+  @apply fixed top-8 left-8 z-50;
+  width: 220px;
+  height: 220px;
+  border-radius: 9999px;
+  background-color: #0f172a;
+  border: 5px solid #3b82f6;
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.logo-hero {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+  transition: transform 0.3s ease-in-out;
+}
+
+.logo-hero:hover {
+  transform: scale(1.05);
+}
+
+
+.animate-bounce {
+  animation: bounce 1.2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ============================== */
+/* BOTÓN AGREGAR PRODUCTO        */
+/* ============================== */
+.btn-agregar {
+  @apply bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold py-2 px-6 rounded-xl shadow-md flex items-center gap-2 transition-all duration-300;
+}
+
+/* ============================== */
+/* BÚSQUEDA                      */
+/* ============================== */
+.productos-search {
+  @apply mt-6 w-80 p-3 rounded-xl bg-white text-black border border-blue-400 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300;
+}
+
+/* ============================== */
+/* TABLA MODERNA + ANIMACIONES   */
+/* ============================== */
+.productos-table-container {
+  @apply w-full mt-10 overflow-x-auto rounded-xl shadow-2xl bg-gray-800 p-6 border border-gray-700;
+}
+
+.productos-table {
+  @apply w-full text-sm text-left text-white;
+}
+
+.productos-table thead {
+  @apply bg-gray-700;
+}
+
+.productos-table th {
+  @apply px-6 py-4 font-semibold tracking-wide uppercase border-b border-gray-600;
+}
+
+.productos-table td {
+  @apply px-6 py-4 border-b border-gray-700 transition-all duration-300;
+}
+
+.productos-table tr:hover {
+  @apply bg-gray-700;
+}
+
+/* ============================== */
+/* BOTONES DE ACCIÓN             */
+/* ============================== */
+.btn-editar {
+  @apply bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg shadow-md transition-all flex items-center gap-2;
+}
+
+.btn-eliminar {
+  @apply bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition-all flex items-center gap-2;
+}
+
+/* ============================== */
+/* MODAL FORMULARIO              */
+/* ============================== */
+.modal-input {
+  @apply w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 shadow-inner;
+}
+
+.modal-btn {
+  @apply w-full bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold py-2 px-4 rounded-lg mt-4 shadow-lg;
+}
