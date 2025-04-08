@@ -8,12 +8,14 @@ import {
   Modal,
   Form,
   InputNumber,
+  Select,
 } from "antd";
 import { FaPlus, FaCheckCircle, FaTrash } from "react-icons/fa";
 import "../styles/facturas.css";
 
-const API_URL = import.meta.env.VITE_API_URL;
 const { Step } = Steps;
+const { Option } = Select;
+const API_URL = import.meta.env.VITE_API_URL;
 
 function CrearFactura() {
   const navigate = useNavigate();
@@ -30,6 +32,9 @@ function CrearFactura() {
   const [busqueda, setBusqueda] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [cantidadModalVisible, setCantidadModalVisible] = useState(false);
+  const [productoSeleccionadoTemp, setProductoSeleccionadoTemp] = useState(null);
+  const [cantidadForm] = Form.useForm();
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -63,16 +68,36 @@ function CrearFactura() {
     calcularTotal();
   }, [productosSeleccionados, costoEnvio, descuentoTotal, calcularTotal]);
 
-  const agregarProducto = (p) => {
-    if (p.stock <= 0) return message.warning("Sin stock disponible");
-    if (productosSeleccionados.find((prod) => prod.id === p.id)) {
+  const agregarProducto = (producto) => {
+    if (producto.stock <= 0) return message.warning("Sin stock disponible");
+    if (productosSeleccionados.find((p) => p.id === producto.id)) {
       return message.info("Este producto ya está en la lista");
     }
+    setProductoSeleccionadoTemp(producto);
+    setCantidadModalVisible(true);
+  };
+
+  const confirmarAgregarCantidad = (values) => {
+    const { cantidadQuintales = 0, cantidadUnidades = 0 } = values;
+    const p = productoSeleccionadoTemp;
+    const unPorQ = p.unidades_por_quintal || 1;
+    const totalUnidades = cantidadQuintales * unPorQ + cantidadUnidades;
+
+    if (totalUnidades > p.stock) {
+      return message.warning("Excede el stock disponible");
+    }
+
     setProductosSeleccionados((prev) => [
       ...prev,
-      { ...p, cantidadQuintales: 0, cantidadUnidades: 0 },
+      {
+        ...p,
+        cantidadQuintales,
+        cantidadUnidades,
+      },
     ]);
-    message.success("Producto agregado");
+    cantidadForm.resetFields();
+    setCantidadModalVisible(false);
+    message.success("Producto agregado con cantidad");
   };
 
   const quitarProducto = (id) => {
@@ -93,16 +118,6 @@ function CrearFactura() {
 
         if (totalUnidades > p.stock) {
           message.warning("Excede el stock disponible");
-          return p;
-        }
-
-        if (
-          campo === "cantidadUnidades" &&
-          p.precio_quintal &&
-          p.unidades_por_quintal &&
-          nuevoValor >= p.unidades_por_quintal
-        ) {
-          message.warning("Usa un quintal en lugar de tantas unidades");
           return p;
         }
 
@@ -149,8 +164,7 @@ function CrearFactura() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
+          Authorization: `Token ${token}` },
         body: JSON.stringify(payload),
       });
 
@@ -318,10 +332,6 @@ function CrearFactura() {
 
   return (
     <div className="productos-container">
-      <div className="logo-wrapper">
-        <img src="/Logo.jpeg" alt="Logo" className="logo-hero" />
-      </div>
-
       <Steps
         current={currentStep}
         items={pasos.map((p) => ({ title: p.title }))}
@@ -352,6 +362,7 @@ function CrearFactura() {
         )}
       </div>
 
+      {/* Modal: Crear producto nuevo */}
       <Modal
         title="Agregar Nuevo Producto"
         open={modalVisible}
@@ -362,8 +373,7 @@ function CrearFactura() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Token ${token}`,
-              },
+                Authorization: `Token ${token}` },
               body: JSON.stringify(values),
             });
             const nuevo = await res.json();
@@ -378,11 +388,7 @@ function CrearFactura() {
           <Form.Item name="nombre" label="Nombre" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="precio"
-            label="Precio por unidad"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="precio" label="Precio por unidad" rules={[{ required: true }]}>
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item name="precio_quintal" label="Precio por quintal">
@@ -391,8 +397,32 @@ function CrearFactura() {
           <Form.Item name="unidades_por_quintal" label="Unidades por quintal">
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
+          <Form.Item name="categoria" label="Categoría" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
           <Form.Item name="stock" label="Stock" rules={[{ required: true }]}>
             <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal: Cantidades al agregar */}
+      <Modal
+        title="Cantidad del producto"
+        open={cantidadModalVisible}
+        onCancel={() => setCantidadModalVisible(false)}
+        onOk={() => {
+          cantidadForm.validateFields().then(confirmarAgregarCantidad);
+        }}
+      >
+        <Form layout="vertical" form={cantidadForm}>
+          {productoSeleccionadoTemp?.precio_quintal && (
+            <Form.Item label="Cantidad x Quintal" name="cantidadQuintales">
+              <InputNumber style={{ width: "100%" }} min={0} />
+            </Form.Item>
+          )}
+          <Form.Item label="Cantidad x Unidad" name="cantidadUnidades">
+            <InputNumber style={{ width: "100%" }} min={0} />
           </Form.Item>
         </Form>
       </Modal>
