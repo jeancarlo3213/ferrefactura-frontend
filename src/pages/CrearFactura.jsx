@@ -109,7 +109,6 @@ function CrearFactura() {
       prev.map((p) => {
         if (p.id !== id) return p;
         const nuevoValor = parseFloat(valor) || 0;
-
         const unPorQ = p.unidades_por_quintal || 1;
         const totalUnidades =
           (campo === "cantidadQuintales" ? nuevoValor : p.cantidadQuintales) *
@@ -127,7 +126,8 @@ function CrearFactura() {
   };
 
   const confirmarFactura = async () => {
-    if (!nombreCliente.trim()) return message.error("Nombre del cliente requerido");
+    if (!nombreCliente.trim())
+      return message.error("Nombre del cliente requerido");
     if (!fechaEntrega) return message.error("Fecha de entrega requerida");
     if (productosSeleccionados.length === 0)
       return message.error("Debes agregar al menos un producto");
@@ -160,17 +160,46 @@ function CrearFactura() {
 
     setSubmitting(true);
     try {
+      // Crear la factura
       const res = await fetch(`${API_URL}/facturas/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Token ${token}` },
+          Authorization: `Token ${token}`,
+        },
         body: JSON.stringify(payload),
       });
-
       if (!res.ok) throw new Error("Error al guardar factura");
       const data = await res.json();
-      message.success("Factura creada");
+
+      // Actualizar el stock de los productos vendidos
+      for (const prod of productosSeleccionados) {
+        // Calculamos la cantidad total de unidades compradas:
+        // (cantidad de quintales * unidades por quintal) + cantidad de unidades
+        const purchasedUnits =
+          (prod.cantidadQuintales || 0) * (prod.unidades_por_quintal || 1) +
+          (prod.cantidadUnidades || 0);
+        const updatedStock = prod.stock - purchasedUnits;
+
+        const updateRes = await fetch(
+          `${API_URL}/productos/${prod.id}/`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Token ${token}`,
+            },
+            body: JSON.stringify({ stock: updatedStock }),
+          }
+        );
+        if (!updateRes.ok) {
+          throw new Error(
+            `Error al actualizar el stock del producto ${prod.nombre}`
+          );
+        }
+      }
+
+      message.success("Factura creada y stock actualizado");
       navigate(`/verfactura/${data.id}`);
     } catch (err) {
       message.error(err.message);
@@ -215,7 +244,9 @@ function CrearFactura() {
               onChange={(e) => setBusqueda(e.target.value)}
               className="productos-search"
             />
-            <Button onClick={() => setModalVisible(true)}>+ Nuevo Producto</Button>
+            <Button onClick={() => setModalVisible(true)}>
+              + Nuevo Producto
+            </Button>
           </div>
           <div className="space-y-4">
             {productos
@@ -298,7 +329,9 @@ function CrearFactura() {
                     className="self-end"
                   />
                 </div>
-                <p className="text-center font-medium">Total: Q{total.toFixed(2)}</p>
+                <p className="text-center font-medium">
+                  Total: Q{total.toFixed(2)}
+                </p>
               </div>
             );
           })}
@@ -344,7 +377,9 @@ function CrearFactura() {
 
       <div className="flex justify-between mt-6 w-full">
         {currentStep > 0 && (
-          <Button onClick={() => setCurrentStep(currentStep - 1)}>Regresar</Button>
+          <Button onClick={() => setCurrentStep(currentStep - 1)}>
+            Regresar
+          </Button>
         )}
         {currentStep < pasos.length - 1 ? (
           <Button type="primary" onClick={() => setCurrentStep(currentStep + 1)}>
@@ -373,7 +408,8 @@ function CrearFactura() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Token ${token}` },
+                Authorization: `Token ${token}`,
+              },
               body: JSON.stringify(values),
             });
             const nuevo = await res.json();
@@ -388,16 +424,27 @@ function CrearFactura() {
           <Form.Item name="nombre" label="Nombre" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="precio" label="Precio por unidad" rules={[{ required: true }]}>
+          <Form.Item
+            name="precio"
+            label="Precio por unidad"
+            rules={[{ required: true }]}
+          >
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item name="precio_quintal" label="Precio por quintal">
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="unidades_por_quintal" label="Unidades por quintal">
+          <Form.Item
+            name="unidades_por_quintal"
+            label="Unidades por quintal"
+          >
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
-          <Form.Item name="categoria" label="Categoría" rules={[{ required: true }]}>
+          <Form.Item
+            name="categoria"
+            label="Categoría"
+            rules={[{ required: true }]}
+          >
             <Input />
           </Form.Item>
           <Form.Item name="stock" label="Stock" rules={[{ required: true }]}>
@@ -417,7 +464,10 @@ function CrearFactura() {
       >
         <Form layout="vertical" form={cantidadForm}>
           {productoSeleccionadoTemp?.precio_quintal && (
-            <Form.Item label="Cantidad x Quintal" name="cantidadQuintales">
+            <Form.Item
+              label="Cantidad x Quintal"
+              name="cantidadQuintales"
+            >
               <InputNumber style={{ width: "100%" }} min={0} />
             </Form.Item>
           )}
