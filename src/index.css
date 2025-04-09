@@ -5,6 +5,11 @@
 @tailwind utilities;
 @import "~bootstrap/dist/css/bootstrap.min.css";
 
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
 
 
 body {

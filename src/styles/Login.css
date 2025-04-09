@@ -1,74 +1,82 @@
-/* 🔹 Fondo oscuro con Glassmorphism */
-.login-page {
-  background: url("/ferreteria.png") no-repeat center center fixed;
-  background-size: cover;
+/* 🔷 Fondo animado de Vanta ocupando toda la pantalla */
+.vanta-bg {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
-  position: relative;
 }
 
-/* 🔹 Desenfoque en la imagen de fondo */
-.login-page::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  z-index: 0;
-}
-
-/* 🔹 Contenedor del login con efecto Glassmorphism */
+/* 🔷 Contenedor del formulario glass + glow */
 .login-container {
   position: relative;
+  z-index: 1;
   text-align: center;
   max-width: 400px;
+  width: 100%;
   padding: 40px;
-  background: rgba(15, 15, 15, 0.8);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
+  animation: borderGlow 3s ease-in-out infinite;
   transition: all 0.3s ease;
 }
 
-/* 🔹 Efecto de resplandor dinámico con el mouse */
-.login-container:hover {
-  box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+/* 🔷 Animación de brillo en el borde */
+@keyframes borderGlow {
+  0% {
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(37, 99, 235, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+  }
 }
 
-/* 🔹 Estilos oscuros en los campos */
+/* 🔷 Agrupador de campos */
 .input-group {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 5px;
   width: 100%;
+  margin-bottom: 16px;
 }
 
 input {
   width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
+  padding: 14px 18px;
   font-size: 1em;
+  border: none;
   outline: none;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
   color: white;
+  background: #0f172a; /* Fondo oscuro similar al contenedor */
+  box-shadow:
+    inset 4px 4px 10px rgba(0, 0, 0, 0.6),
+    inset -4px -4px 10px rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
 }
 
-/* 🔹 Resplandor en los inputs al hacer focus */
 input:focus {
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.8),
+    inset -2px -2px 6px rgba(255, 255, 255, 0.07),
+    0 0 10px rgba(37, 99, 235, 0.3);
+  background: #1e293b;
 }
 
-/* 🔹 Botón elegante con efecto hover */
+
+/* 🔷 Botón con gradiente y sombra */
 .btn-login {
   background: linear-gradient(135deg, #2563eb, #1e3a8a);
   color: white;
@@ -78,11 +86,36 @@ input:focus {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 5px 15px rgba(37, 99, 235, 0.5);
+  width: 100%;
 }
 
-/* 🔹 Efecto de resplandor en el botón al pasar el mouse */
 .btn-login:hover {
   background: linear-gradient(135deg, #1e3a8a, #2563eb);
   box-shadow: 0 0 25px rgba(37, 99, 235, 0.6);
   transform: translateY(-2px);
+}
+
+/* 🔷 Mostrar/Ocultar contraseña (👁️) */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* 🔷 Texto de error */
+.error-text {
+  color: #f87171;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
 }

@@ -1,37 +1,68 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaSignInAlt } from "react-icons/fa";
+import { motion } from "framer-motion";
 
 function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white text-center p-4">
-      <h1 className="text-4xl font-bold">
-        Bienvenido a <span className="text-blue-400">Ferretería Campesino</span>
-      </h1>
-      <p className="text-lg mt-2">"Tu mejor aliado en construcción y hogar."</p>
-
-      {/* Imagen de la ferretería */}
-      <img
-        src="/ferreteria.png"
-        alt="Ferretería Campesino"
-        className="w-80 h-48 object-cover rounded-lg mt-4 shadow-lg"
-      />
-
-      {/* Imagen de la ubicación */}
-      <h2 className="text-2xl font-semibold mt-6">Nuestra Ubicación</h2>
-      <img
-        src="/ubicacion.png"
-        alt="Ubicación de Ferretería Campesino"
-        className="w-80 h-48 object-cover rounded-lg mt-4 shadow-lg"
-      />
-
-      {/* Botón de iniciar sesión */}
-      <Link
-        to="/login"
-        className="mt-6 px-6 py-3 bg-blue-500 rounded-lg text-white font-semibold flex items-center gap-2 hover:bg-blue-600 transition"
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-950 to-slate-900 text-white px-6">
+      
+      {/* Título principal animado */}
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-center max-w-2xl"
       >
-        <FaSignInAlt size={20} /> Iniciar Sesión
-      </Link>
+        <h1 className="text-5xl font-extrabold mb-4">
+          Bienvenido a <span className="text-blue-400">Ferretería Campesino</span>
+        </h1>
+        <p className="text-xl mb-8 italic">
+          Tu mejor aliado en construcción y hogar.
+        </p>
+      </motion.div>
+
+      {/* Cards con información */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-xl transition hover:scale-105"
+        >
+          <h2 className="text-xl font-semibold mb-2">Productos y Servicios</h2>
+          <p className="text-sm">
+            Desde clavos hasta cemento: todo para tu obra y hogar en un solo lugar.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 hover:shadow-xl transition hover:scale-105"
+        >
+          <h2 className="text-xl font-semibold mb-2">Ubicación Estratégica</h2>
+          <p className="text-sm">
+            Estamos en el corazón de tu comunidad para darte una atención rápida y cercana.
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Botón de inicio de sesión animado */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.6 }}
+      >
+        <Link
+          to="/login"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 rounded-lg text-white font-semibold hover:bg-blue-700 transition shadow-md"
+        >
+          <FaSignInAlt size={20} />
+          Iniciar Sesión
+        </Link>
+      </motion.div>
     </div>
   );
 }
