@@ -6,11 +6,7 @@ import {
   getSortedRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import {
-  FaEdit,
-  FaTrash,
-  FaPlus,
-} from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Button, Input, Modal, message, Form, InputNumber } from "antd";
 import "../styles/productos.css";
 
@@ -131,6 +127,7 @@ function Productos() {
     { header: "Precio Quintal", accessorKey: "precio_quintal" },
     { header: "Unidades x Quintal", accessorKey: "unidades_por_quintal" },
     { header: "Stock", accessorKey: "stock" },
+    { header: "Categoría", accessorKey: "categoria" },
     {
       header: "Acciones",
       cell: ({ row }) => (
@@ -154,10 +151,9 @@ function Productos() {
   return (
     <div className="productos-container">
       <header className="productos-header">
-      <div className="logo-wrapper">
-  <img src="/Logo.jpeg" alt="Logo" className="logo-hero" />
-</div>
-
+        <div className="logo-wrapper">
+          <img src="/Logo.jpeg" alt="Logo" className="logo-hero" />
+        </div>
         <h2 className="productos-title">📦 Gestión de Productos</h2>
         <Button className="btn-agregar" onClick={() => abrirModal("agregar")}>
           <FaPlus /> Agregar Producto
@@ -203,24 +199,34 @@ function Productos() {
         open={modalVisible}
         onCancel={cerrarModal}
         footer={null}
+        centered
       >
-        <Form layout="vertical" form={form} onFinish={onFinish} onValuesChange={onValuesChange}>
+        <Form
+          layout="vertical"
+          form={form}
+          onFinish={onFinish}
+          onValuesChange={onValuesChange}
+          className="productos-modal-form"
+        >
           <Form.Item label="Nombre" name="nombre" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item label="Precio (unidad)" name="precio" rules={[{ required: true }]}>
-            <InputNumber style={{ width: "100%" }} />
+            <InputNumber />
           </Form.Item>
           <Form.Item label="Precio por Quintal" name="precio_quintal">
-            <InputNumber style={{ width: "100%" }} />
+            <InputNumber />
           </Form.Item>
           <Form.Item label="Unidades por Quintal" name="unidades_por_quintal">
-            <InputNumber style={{ width: "100%" }} />
+            <InputNumber />
           </Form.Item>
           <Form.Item label="Stock" name="stock" rules={[{ required: true }]}>
-            <InputNumber style={{ width: "100%" }} />
+            <InputNumber />
           </Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading} block>
+          <Form.Item label="Categoría" name="categoria" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Button htmlType="submit" loading={loading} className="modal-btn">
             {modo === "agregar" ? "Agregar" : "Actualizar"}
           </Button>
         </Form>

@@ -24,13 +24,14 @@
   width: 180px;
   height: 180px;
   border-radius: 9999px;
-  object-fit: cover; /* usamos cover para que llene el círculo */
+  object-fit: cover;
   background-color: #0f172a;
   box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
   border: 4px solid #1e40af;
-  transform: translateX(-30px); /* desplaza hacia la izquierda */
+  transform: translateX(-30px);
   transition: transform 0.3s ease-in-out, box-shadow 0.3s;
 }
+
 .logo-wrapper {
   @apply fixed top-8 left-8 z-50;
   width: 220px;
@@ -56,7 +57,6 @@
 .logo-hero:hover {
   transform: scale(1.05);
 }
-
 
 .animate-bounce {
   animation: bounce 1.2s infinite;
@@ -126,6 +126,51 @@
   @apply w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 shadow-inner;
 }
 
+/* ============================== */
+/* MODAL DE PRODUCTOS - CÓMODO Y LIMPIO */
+/* ============================== */
+.productos-modal-form {
+  @apply p-6 rounded-2xl bg-white shadow-xl border border-gray-200 space-y-5;
+  animation: modalFadeIn 0.3s ease-out;
+  transition: all 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.productos-modal-form .ant-form-item {
+  @apply mb-4;
+}
+
+.productos-modal-form .ant-form-item-label label {
+  @apply text-gray-800 font-medium;
+}
+
+.productos-modal-form input,
+.productos-modal-form .ant-input-number,
+.productos-modal-form input[type="text"] {
+  @apply w-full rounded-lg bg-gray-50 text-gray-900 border border-gray-300 px-4 py-2 shadow-sm transition-all duration-200;
+}
+
+.productos-modal-form input:focus,
+.productos-modal-form .ant-input-number:focus-within {
+  @apply border-blue-500 ring-1 ring-blue-400 outline-none bg-white;
+  color: #111827;
+}
+
+.productos-modal-form input::placeholder {
+  color: #9ca3af;
+  opacity: 0.8;
+}
+
 .modal-btn {
-  @apply w-full bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold py-2 px-4 rounded-lg mt-4 shadow-lg;
+  @apply mt-2 w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition-transform duration-200 hover:-translate-y-0.5;
 }
