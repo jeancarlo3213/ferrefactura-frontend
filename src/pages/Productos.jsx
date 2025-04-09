@@ -56,15 +56,6 @@ function Productos() {
     setProductoSeleccionado(null);
   };
 
-  const onValuesChange = (_, allValues) => {
-    const { precio_quintal, unidades_por_quintal } = allValues;
-    if (precio_quintal && unidades_por_quintal > 0) {
-      form.setFieldsValue({
-        precio: parseFloat(precio_quintal / unidades_por_quintal).toFixed(2),
-      });
-    }
-  };
-
   const onFinish = async (values) => {
     setLoading(true);
     const token = localStorage.getItem("token");
@@ -205,23 +196,22 @@ function Productos() {
           layout="vertical"
           form={form}
           onFinish={onFinish}
-          onValuesChange={onValuesChange}
           className="productos-modal-form"
         >
           <Form.Item label="Nombre" name="nombre" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item label="Precio (unidad)" name="precio" rules={[{ required: true }]}>
-            <InputNumber />
+            <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item label="Precio por Quintal" name="precio_quintal">
-            <InputNumber />
+            <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item label="Unidades por Quintal" name="unidades_por_quintal">
-            <InputNumber />
+            <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item label="Stock" name="stock" rules={[{ required: true }]}>
-            <InputNumber />
+            <InputNumber style={{ width: "100%" }} />
           </Form.Item>
           <Form.Item label="Categoría" name="categoria" rules={[{ required: true }]}>
             <Input />
