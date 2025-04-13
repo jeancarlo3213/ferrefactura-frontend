@@ -20,6 +20,10 @@ import Historial from "./pages/Historial";
 import CajaDiaria from "./pages/CajaDiaria";
 import Deudores from "./pages/Deudores";
 import EditarFactura from "./pages/EditarFactura"; // Asegurar capitalización correcta
+import Reportes from "./pages/Reportes"; // o la ruta correcta
+
+<Route path="/reportes" element={<Reportes />} />
+
 
 const PrivateRoute = ({ element }) => {
   return isAuthenticated() ? element : <Navigate to="/login" />;
@@ -48,6 +52,8 @@ function App() {
         <Route path="/caja-diaria" element={<CajaDiaria />} />
         <Route path="/deudores" element={<Deudores />} />
         <Route path="/editarfactura/:id" element={<EditarFactura />} />
+        <Route path="/reportes" element={<Reportes />} />
+        
       </Routes>
     </>
   );

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
 import {
   Box,
   Text,
@@ -18,7 +17,9 @@ import {
   FaShieldAlt,
   FaBars,
   FaMoneyBillWave,
+  FaChartBar, // Icono para Reportes
 } from "react-icons/fa";
+
 import ReactECharts from "echarts-for-react";
 import { motion } from "framer-motion";
 
@@ -109,6 +110,7 @@ function Dashboard() {
 
   return (
     <Box display="flex" minH="100vh" bg="gray.900" color="white">
+      {/* Menú lateral */}
       <Box w={menuOpen ? "250px" : "80px"} bg="gray.800" p="5" minH="100vh" transition="0.3s">
         <IconButton
           icon={<FaBars />}
@@ -132,12 +134,19 @@ function Dashboard() {
           <Button as={Link} to="/administrador" leftIcon={<FaShieldAlt />} colorScheme="purple" w="full">
             Administrador
           </Button>
+
+          {/* ✅ Botón nuevo para acceder a Reportes */}
+          <Button as={Link} to="/reportes" leftIcon={<FaChartBar />} colorScheme="teal" w="full">
+            Reportes
+          </Button>
+
           <Button onClick={() => navigate("/login")} leftIcon={<FaSignOutAlt />} colorScheme="red" w="full">
             Cerrar Sesión
           </Button>
         </VStack>
       </Box>
 
+      {/* Contenido principal */}
       <Box flex="1" p="6">
         <Text fontSize="3xl" fontWeight="bold" textAlign="center" mb="6">
           Panel de Control
