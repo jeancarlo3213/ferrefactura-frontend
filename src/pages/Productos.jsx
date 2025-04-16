@@ -117,6 +117,8 @@ function Productos() {
     { header: "Precio (Q)", accessorKey: "precio" },
     { header: "Precio Quintal", accessorKey: "precio_quintal" },
     { header: "Unidades x Quintal", accessorKey: "unidades_por_quintal" },
+    { header: "Precio Compra Unidad", accessorKey: "precio_compra_unidad" },
+    { header: "Precio Compra Quintal", accessorKey: "precio_compra_quintal" },
     { header: "Stock", accessorKey: "stock" },
     { header: "Categoría", accessorKey: "categoria" },
     {
@@ -138,6 +140,8 @@ function Productos() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
+
+  const unidadesPorQuintal = Form.useWatch("unidades_por_quintal", form);
 
   return (
     <div className="productos-container">
@@ -210,6 +214,14 @@ function Productos() {
           <Form.Item label="Unidades por Quintal" name="unidades_por_quintal">
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
+          <Form.Item label="Precio de compra por unidad" name="precio_compra_unidad">
+            <InputNumber style={{ width: "100%" }} />
+          </Form.Item>
+          {unidadesPorQuintal > 0 && (
+            <Form.Item label="Precio de compra por quintal" name="precio_compra_quintal">
+              <InputNumber style={{ width: "100%" }} />
+            </Form.Item>
+          )}
           <Form.Item label="Stock" name="stock" rules={[{ required: true }]}>
             <InputNumber style={{ width: "100%" }} />
           </Form.Item>
