@@ -1,189 +1,226 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Box,
-  Text,
-  SimpleGrid,
-  Button,
-  VStack,
-  IconButton,
-} from "@chakra-ui/react";
-
-import {
+  FaBars,
   FaUser,
   FaBox,
   FaFileInvoice,
-  FaSignOutAlt,
-  FaShieldAlt,
-  FaBars,
   FaMoneyBillWave,
-  FaChartBar, // Icono para Reportes
+  FaShieldAlt,
+  FaChartBar,
+  FaSignOutAlt,
 } from "react-icons/fa";
-
 import ReactECharts from "echarts-for-react";
 import { motion } from "framer-motion";
 
-const MotionBox = motion(Box);
-const API_URL = import.meta.env.VITE_API_URL;
+import "../styles/dashboard.css";
 
-function Dashboard() {
+const API = import.meta.env.VITE_API_URL;
+
+const calcInv = (p) => {
+  const { stock, precio_compra_unidad: u, precio_compra_quintal: q, unidades_por_quintal: n } = p;
+  if (u && q && n) return Math.floor(stock / n) * q + (stock % n) * u;
+  if (u) return stock * u;
+  return 0;
+};
+
+export default function Dashboard() {
   const navigate = useNavigate();
-  const [estadisticas, setEstadisticas] = useState({
-    facturas_hoy: 0,
-    facturas_mes: 0,
-    total_ventas: 0,
-    ganancias_mes: 0,
-  });
-  const [ventasDiarias, setVentasDiarias] = useState([]);
-  const [ventasMensuales, setVentasMensuales] = useState([]);
   const [menuOpen, setMenuOpen] = useState(true);
+  const [productos, setProductos] = useState([]);
+  const [detalles, setDetalles] = useState([]);
 
   useEffect(() => {
-    fetchData();
+    (async () => {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Token ${token}` };
+      const [prodRes, facRes] = await Promise.all([
+        fetch(`${API}/productos/`, { headers }),
+        fetch(`${API}/facturas/`, { headers }),
+      ]);
+      const prods = await prodRes.json();
+      const fact = await facRes.json();
+      setProductos(prods);
+      setDetalles(
+        fact.flatMap((f) => f.detalles.map((d) => ({ ...d, fecha: f.fecha_creacion, facturaId: f.id })))
+      );
+    })();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No hay token de autenticación.");
+  const totalProductos = productos.length;
+  const stockBajo = productos.filter((p) => p.stock <= 5).length;
+  const inversionTotal = productos.reduce((s, p) => s + calcInv(p), 0);
+  const valorVentaTotal = productos.reduce((s, p) => s + p.precio * p.stock, 0);
+  const gananciaTeorica = valorVentaTotal - inversionTotal;
 
-      const [statsRes, dailyRes, monthlyRes] = await Promise.all([
-        fetch(`${API_URL}/estadisticas-facturas/`, {
-          headers: { Authorization: `Token ${token}` },
-        }),
-        fetch(`${API_URL}/ventas-diarias/`, {
-          headers: { Authorization: `Token ${token}` },
-        }),
-        fetch(`${API_URL}/ventas-anuales/`, {
-          headers: { Authorization: `Token ${token}` },
-        }),
-      ]);
+  const ventasMes = {};
+  const ventasAnio = {};
+  const sold = {};
 
-      if (!statsRes.ok || !dailyRes.ok || !monthlyRes.ok)
-        throw new Error("Error al obtener datos.");
+  detalles.forEach((d) => {
+    if (!d.fecha) return;
+    const pu = parseFloat(d.precio_unitario);
+    const total = d.cantidad * pu;
+    const keyM = d.fecha.slice(0, 7);
+    const keyY = d.fecha.slice(0, 4);
+    ventasMes[keyM] = (ventasMes[keyM] || 0) + total;
+    ventasAnio[keyY] = (ventasAnio[keyY] || 0) + total;
+    sold[d.producto_nombre] = (sold[d.producto_nombre] || 0) + d.cantidad;
+  });
 
-      const statsData = await statsRes.json();
-      const dailyData = await dailyRes.json();
-      const monthlyData = await monthlyRes.json();
+  const ventasMesArr = Object.entries(ventasMes).sort();
+  const ventasAnioArr = Object.entries(ventasAnio).sort();
+  const top5 = Object.entries(sold).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-      setEstadisticas(statsData);
-      setVentasDiarias(formatChartData(dailyData.ventas_por_dia, "Día"));
-      setVentasMensuales(formatChartData(monthlyData.ventas_por_mes, "Mes"));
-    } catch (err) {
-      console.error("Error obteniendo datos:", err);
-    }
+  const optVentasMes = {
+    title: { text: "Ventas por Mes", left: "center", textStyle: { color: "#fff" } },
+    grid: { left: 45, right: 10, top: 40, bottom: 35 },
+    tooltip: { trigger: "axis" },
+    xAxis: { type: "category", data: ventasMesArr.map((d) => d[0]), axisLabel: { color: "#fff" } },
+    yAxis: { type: "value", axisLabel: { color: "#fff" } },
+    series: [{ type: "line", smooth: true, data: ventasMesArr.map((d) => d[1]) }],
+    color: ["#60a5fa"],
   };
 
-  const formatChartData = (data, label) => {
-    return Object.keys(data).map((key) => ({
-      name: `${label} ${key}`,
-      value: data[key] || 0,
+  const optVentasAnio = {
+    title: { text: "Ventas por Año", left: "center", textStyle: { color: "#fff" } },
+    grid: { left: 45, right: 10, top: 40, bottom: 35 },
+    tooltip: {},
+    xAxis: { type: "category", data: ventasAnioArr.map((d) => d[0]), axisLabel: { color: "#fff" } },
+    yAxis: { type: "value", axisLabel: { color: "#fff" } },
+    series: [{ type: "bar", data: ventasAnioArr.map((d) => d[1]) }],
+    color: ["#818cf8"],
+  };
+
+  const optPie = {
+    title: { text: "Top 5 Vendidos", left: "center", textStyle: { color: "#fff" } },
+    tooltip: { trigger: "item" },
+    legend: { orient: "vertical", left: "left", textStyle: { color: "#fff" } },
+    series: [
+      {
+        name: "Producto",
+        type: "pie",
+        radius: ["40%", "70%"],
+        avoidLabelOverlap: true,
+        label: { show: false },
+        data: top5.map(([name, value]) => ({ name, value })),
+      },
+    ],
+  };
+
+  const last5 = [...detalles]
+    .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+    .slice(0, 5)
+    .map((d) => ({
+      id: d.facturaId,
+      fecha: d.fecha.slice(0, 10),
+      prod: d.producto_nombre,
+      total: (d.cantidad * parseFloat(d.precio_unitario)).toFixed(2),
     }));
-  };
 
-  const ventasDiariasOptions = {
-    title: { text: "Ventas por Día", left: "center" },
-    tooltip: {},
-    xAxis: { type: "category", data: ventasDiarias.map((item) => item.name) },
-    yAxis: { type: "value" },
-    series: [
-      {
-        type: "line",
-        data: ventasDiarias.map((item) => item.value),
-        smooth: true,
-      },
-    ],
-  };
-
-  const ventasMensualesOptions = {
-    title: { text: "Ventas por Mes", left: "center" },
-    tooltip: {},
-    xAxis: { type: "category", data: ventasMensuales.map((item) => item.name) },
-    yAxis: { type: "value" },
-    series: [
-      {
-        type: "bar",
-        data: ventasMensuales.map((item) => item.value),
-      },
-    ],
-  };
+  const metricCards = [
+    { label: "TOTAL PRODUCTOS", value: totalProductos },
+    { label: "STOCK BAJO (≤5)", value: stockBajo },
+    { label: "INVERSIÓN TOTAL", value: `Q${inversionTotal.toFixed(2)}` },
+    { label: "VALOR VENTA TOTAL", value: `Q${valorVentaTotal.toFixed(2)}` },
+    { label: "GANANCIA TEÓRICA", value: `Q${gananciaTeorica.toFixed(2)}` },
+  ];
 
   return (
-    <Box display="flex" minH="100vh" bg="gray.900" color="white">
-      {/* Menú lateral */}
-      <Box w={menuOpen ? "250px" : "80px"} bg="gray.800" p="5" minH="100vh" transition="0.3s">
-        <IconButton
-          icon={<FaBars />}
-          onClick={() => setMenuOpen(!menuOpen)}
-          colorScheme="teal"
-          mb="5"
-        />
-        <VStack spacing="4">
-          <Button as={Link} to="/usuarios" leftIcon={<FaUser />} variant="ghost" w="full">
-            Usuarios
-          </Button>
-          <Button as={Link} to="/productos" leftIcon={<FaBox />} variant="ghost" w="full">
-            Productos
-          </Button>
-          <Button as={Link} to="/facturas" leftIcon={<FaFileInvoice />} variant="ghost" w="full">
-            Facturas
-          </Button>
-          <Button as={Link} to="/deudores" leftIcon={<FaMoneyBillWave />} colorScheme="yellow" w="full">
-            Deudores
-          </Button>
-          <Button as={Link} to="/administrador" leftIcon={<FaShieldAlt />} colorScheme="purple" w="full">
-            Administrador
-          </Button>
+    <div className="dashboard flex">
+      <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
+        <button className="sidebar-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+          <FaBars />
+        </button>
 
-          {/* ✅ Botón nuevo para acceder a Reportes */}
-          <Button as={Link} to="/reportes" leftIcon={<FaChartBar />} colorScheme="teal" w="full">
-            Reportes
-          </Button>
+        <nav className="sidebar-nav">
+          <Link to="/usuarios" className="sidebar-btn"><FaUser />{menuOpen && "Usuarios"}</Link>
+          <Link to="/productos" className="sidebar-btn"><FaBox />{menuOpen && "Productos"}</Link>
+          <Link to="/facturas" className="sidebar-btn"><FaFileInvoice />{menuOpen && "Facturas"}</Link>
+          <Link to="/deudores" className="sidebar-btn"><FaMoneyBillWave />{menuOpen && "Deudores"}</Link>
+          <Link to="/administrador" className="sidebar-btn"><FaShieldAlt />{menuOpen && "Admin"}</Link>
+          <Link to="/reportes" className="sidebar-btn"><FaChartBar />{menuOpen && "Reportes"}</Link>
+          <button onClick={() => navigate("/login")} className="sidebar-btn logout">
+            <FaSignOutAlt />{menuOpen && "Salir"}
+          </button>
+        </nav>
+      </aside>
 
-          <Button onClick={() => navigate("/login")} leftIcon={<FaSignOutAlt />} colorScheme="red" w="full">
-            Cerrar Sesión
-          </Button>
-        </VStack>
-      </Box>
-
-      {/* Contenido principal */}
-      <Box flex="1" p="6">
-        <Text fontSize="3xl" fontWeight="bold" textAlign="center" mb="6">
+      <main className="main">
+        <motion.h1
+          className="titulo"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           Panel de Control
-        </Text>
+        </motion.h1>
 
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={5} mb={6}>
-          {Object.entries(estadisticas).map(([key, value], index) => (
-            <MotionBox
-              key={index}
-              p="6"
-              bgGradient="linear(to-r, blue.500, blue.700)"
-              borderRadius="md"
-              textAlign="center"
-              shadow="md"
+        <div className="metrics">
+          {metricCards.map((m) => (
+            <motion.div
+              key={m.label}
+              className="metric-card"
               whileHover={{ scale: 1.05 }}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
             >
-              <Text fontSize="md" fontWeight="bold">
-                {key.replace("_", " ").toUpperCase()}
-              </Text>
-              <Text fontSize="2xl" fontWeight="bold">
-                {value}
-              </Text>
-            </MotionBox>
+              <span className="metric-label">{m.label}</span>
+              <span className="metric-value">{m.value}</span>
+            </motion.div>
           ))}
-        </SimpleGrid>
+        </div>
 
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
-          <MotionBox p="6" bg="gray.800" borderRadius="md" shadow="md" whileHover={{ scale: 1.05 }}>
-            <ReactECharts option={ventasDiariasOptions} />
-          </MotionBox>
-          <MotionBox p="6" bg="gray.800" borderRadius="md" shadow="md" whileHover={{ scale: 1.05 }}>
-            <ReactECharts option={ventasMensualesOptions} />
-          </MotionBox>
-        </SimpleGrid>
-      </Box>
-    </Box>
+        <div className="charts">
+          <motion.div
+            className="chart"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <ReactECharts option={optVentasMes} style={{ height: 240 }} />
+          </motion.div>
+
+          <motion.div
+            className="chart"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <ReactECharts option={optVentasAnio} style={{ height: 240 }} />
+          </motion.div>
+
+          <motion.div
+            className="chart"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <ReactECharts option={optPie} style={{ height: 240 }} />
+          </motion.div>
+        </div>
+
+        <section className="ventas">
+          <h2 className="ventas-titulo">Últimas Ventas</h2>
+          {last5.map((v) => (
+            <motion.button
+              key={`${v.id}-${v.fecha}`}
+              onClick={() => navigate(`/facturas/${v.id}`)}
+              className="venta-row"
+              whileHover={{ scale: 1.03 }}
+            >
+              <span className="venta-fecha">{v.fecha}</span>
+              <span className="venta-prod">{v.prod}</span>
+              <span className="venta-total">Q{v.total}</span>
+            </motion.button>
+          ))}
+        </section>
+      </main>
+    </div>
   );
 }
-
-export default Dashboard;

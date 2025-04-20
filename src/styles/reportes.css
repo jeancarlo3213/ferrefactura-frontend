@@ -1,67 +1,20 @@
-/* Estilos generales */
-.reportes-container {
-  background-color: #1a202c;
-  color: white;
-  min-height: 100vh;
-  padding: 2rem;
+.reporte-btn{
+  color:#fff !important;
+  font-weight:600;
+  padding:8px 18px;
+  border-radius:6px;
+  margin:4px 0;
+  background:#666 !important;   /* color genérico; luego se sobreescribe por tipo            */
+  transition:transform .15s,box-shadow .15s;
 }
 
-.reportes-titulo {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #63b3ed;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.reportes-fechas {
-  margin-bottom: 1rem;
-}
-
-.reportes-fechas input {
-  background-color: #2d3748;
-  color: white;
-  border: 1px solid #4a5568;
-  padding: 0.4rem 0.8rem;
-  margin-right: 0.5rem;
-  border-radius: 6px;
-}
-
-/* Botones */
-.reportes-boton {
-  background-color: #3182ce;
-  color: white;
-  border: none;
-  padding: 0.7rem 1.2rem;
-  border-radius: 8px;
-  font-weight: bold;
-  margin: 0.3rem 0;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.reportes-boton:hover {
-  background-color: #2b6cb0;
-}
-
-/* Modal */
-.reportes-modal iframe {
-  width: 100%;
-  height: 600px;
-  border: none;
-}
-
-.reportes-descargar {
-  background-color: #38a169;
-  color: white;
-  padding: 0.6rem 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 1rem;
-}
-
-.reportes-descargar:hover {
-  background-color: #2f855a;
-}
+/* paleta de colores */
+.blue   { background:#3182ce !important; }
+.teal   { background:#2c7a7b !important; }
+.indigo { background:#5a67d8 !important; }
+.green  { background:#38a169 !important; }
+.orange { background:#dd6b20 !important; }
+.red    { background:#e53e3e !important; }
+.purple { background:#805ad5 !important; }
+.pink   { background:#d53f8c !important; }
+.gray   { background:#4a5568 !important; }
