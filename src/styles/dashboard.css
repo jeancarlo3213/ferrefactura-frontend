@@ -1,162 +1,165 @@
-/* --- Layout base --- */
-.dashboard {
-    width: 100%;
-    min-height: 100vh;
-    background: #0f172a;
-    color: #ffffff;
-    overflow-x: hidden;
-  }
-  
-  /* --- Sidebar --- */
-  .sidebar {
-    background: #0a1628;
-    padding: 1rem;
-    transition: width 0.25s;
-    width: 250px;
-  }
-  .sidebar.open { width: 250px; }
-  .sidebar:not(.open) { width: 80px; }
-  
-  .sidebar-toggle {
-    background: #2563eb;
-    color: #fff;
-    width: 40px;
-    height: 40px;
-    border-radius: 9999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.25rem;
-  }
-  
-  .sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .sidebar-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #1e293b;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    transition: background 0.25s;
-  }
-  .sidebar-btn:hover { background: #334155; }
-  
-  .logout { background: #b91c1c; }
-  .logout:hover { background: #dc2626; }
-  
-  /* --- Main --- */
-  .main {
-    flex: 1;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.75rem;
-    animation: fadeIn 0.6s ease-in-out;
-  }
-  
-  .titulo {
-    font-size: 1.9rem;
-    font-weight: 700;
-    text-align: center;
-    animation: fadeInUp 0.6s ease-in-out;
-  }
-  
-  /* --- Métricas --- */
-  .metrics {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-  }
-  .metric-card {
-    background: radial-gradient(circle at top left, #0099ff, #0055aa);
-    border-radius: 10px;
-    padding: 1.4rem;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    animation: popIn 0.4s ease;
-  }
-  .metric-label { font-size: 0.8rem; opacity: 0.8; }
-  .metric-value { font-size: 1.4rem; font-weight: 700; }
-  
-  /* --- Gráficas --- */
-  .charts {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1rem;
-  }
-  .chart {
-    background: #132137;
-    border-radius: 10px;
-    padding: 0.5rem;
-    animation: fadeIn 0.6s ease;
-  }
-  
-  /* --- Últimas ventas --- */
-  .ventas {
-    background: #132137;
-    border-radius: 10px;
-    padding: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-    animation: fadeInUp 0.6s ease;
-  }
-  .ventas-titulo {
-    font-size: 1.1rem;
-    margin-bottom: 0.6rem;
-  }
-  .venta-row {
-    width: 100%;
-    background: #1e293b;
-    border-radius: 8px;
-    padding: 0.55rem 0.8rem;
-    margin-bottom: 0.45rem;
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9rem;
-    transition: background 0.25s;
-    cursor: pointer;
-    animation: fadeIn 0.4s ease;
-  }
-  .venta-row:hover { background: #334155; }
-  
-  /* --- Animaciones --- */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes popIn {
-    0% { transform: scale(0.9); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  
-  /* --- Scrollbar --- */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #1e293b;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #3b82f6;
-    border-radius: 8px;
-  }
-  
-  /* --- Responsive tweaks --- */
-  @media (max-width: 640px) {
-    .metric-card { padding: 1rem; }
-    .metric-value { font-size: 1.15rem; }
-    .charts { grid-template-columns: 1fr; }
-    .sidebar.open { width: 200px; }
-  }
-  
+/* ======== Dashboard – Dark Pro (usa variables de theme.css) ======== */
+
+/* Layout raíz */
+.dashboard{
+  width:100%;
+  min-height:100vh;
+  display:flex;
+  gap:0;
+  overflow:hidden;
+}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  position:sticky;
+  top:0;
+  height:100vh;
+  width:280px;
+  padding:16px;
+  background: linear-gradient(180deg, #0e0f14 0%, #0b0b0c 100%);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: width .28s ease;
+  backdrop-filter: blur(6px);
+}
+.sidebar:not(.open){ width:76px; }
+
+.sidebar-toggle{
+  width:42px; height:42px;
+  display:grid; place-items:center;
+  border-radius:999px;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+  border:none; outline:0; color:#fff; cursor:pointer;
+  box-shadow: var(--shadow);
+}
+.sidebar-toggle:focus-visible{ outline:2px solid var(--ring) }
+
+.sidebar-nav{
+  margin-top:18px;
+  display:flex; flex-direction:column; gap:8px;
+}
+
+.sidebar-btn{
+  display:flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:10px 12px;
+  transition:background .2s ease, border-color .2s ease, transform .08s ease;
+  white-space:nowrap; overflow:hidden; color: var(--text);
+}
+.sidebar-btn:hover{ background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12) }
+.sidebar-btn:active{ transform:scale(.98) }
+
+/* Oculta texto cuando está colapsada */
+.sidebar:not(.open) .sidebar-btn span{ display:none }
+.sidebar:not(.open) .sidebar-btn{ justify-content:center; padding:10px 0 }
+
+.logout{ background:rgba(239,68,68,.12); border-color:rgba(239,68,68,.25)}
+.logout:hover{ background:rgba(239,68,68,.2)}
+
+/* ===== Main ===== */
+.main{
+  flex:1;
+  padding:22px clamp(16px, 3vw, 28px);
+  display:flex; flex-direction:column; gap:20px;
+  background: radial-gradient(1200px 600px at 10% -20%, rgba(255,255,255,.03), transparent 60%),
+              radial-gradient(1200px 600px at 100% 120%, rgba(255,255,255,.02), transparent 60%),
+              var(--bg);
+}
+
+.titulo{
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 800;
+  letter-spacing:.2px;
+  text-align:center;
+  color: var(--text);
+}
+
+/* ===== Metrics ===== */
+.metrics{
+  display:grid;
+  grid-template-columns: repeat(12, minmax(0,1fr));
+  gap:14px;
+}
+.metric-card{
+  grid-column: span 3;               /* 4 por fila en desktop */
+  background:
+    radial-gradient(1200px 400px at -10% -40%, color-mix(in oklab, var(--brand) 35%, transparent) , transparent 60%),
+    radial-gradient(800px 300px at 120% 120%, color-mix(in oklab, var(--brand-2) 28%, transparent), transparent 60%),
+    var(--surface);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  padding:16px 18px;
+  box-shadow: var(--shadow);
+  display:flex; flex-direction:column; gap:6px;
+  color: var(--text);
+}
+.metric-label{ font-size:.82rem; color:var(--muted) }
+.metric-value{ font-weight:800; font-size: clamp(18px, 2.4vw, 24px) }
+
+@media (max-width: 1100px){ .metric-card{ grid-column: span 4 } }  /* 3 por fila */
+@media (max-width: 820px){ .metric-card{ grid-column: span 6 } }   /* 2 */
+@media (max-width: 540px){ .metric-card{ grid-column: span 12 } }  /* 1 */
+
+/* ===== Charts ===== */
+.charts{
+  display:grid;
+  grid-template-columns: repeat(12, minmax(0,1fr));
+  gap:14px;
+}
+.chart{
+  grid-column: span 4;
+  background: var(--surface-2);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  padding:10px;
+  box-shadow: var(--shadow);
+  min-height:260px;
+}
+@media (max-width: 1100px){ .chart{ grid-column: span 6 } }
+@media (max-width: 700px){ .chart{ grid-column: span 12 } }
+
+/* ===== Últimas Ventas ===== */
+.ventas{
+  background: var(--surface);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding:14px;
+  color: var(--text);
+}
+.ventas-titulo{ font-size:1.05rem; margin:4px 2px 10px; color:#dfe4ee }
+
+.venta-row{
+  width:100%;
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:12px;
+  padding:10px 12px;
+  margin-bottom:8px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  cursor:pointer;
+  transition:background .15s ease, border-color .15s ease, transform .06s ease;
+  color: var(--text);
+}
+.venta-row:hover{ background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.12)}
+.venta-row:active{ transform:scale(.99) }
+.venta-fecha{ color:var(--muted); font-size:.9rem }
+.venta-prod{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; text-align:center }
+.venta-total{ font-weight:700; color:#e9eefb }
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar{ width:10px; height:10px }
+::-webkit-scrollbar-track{ background:#0f1013 }
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, var(--brand), var(--brand-2));
+  border-radius:20px
+}
+
+/* ===== Foco accesible ===== */
+:focus-visible{ outline:2px solid var(--ring); outline-offset:2px }
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; transition:none !important }
+}

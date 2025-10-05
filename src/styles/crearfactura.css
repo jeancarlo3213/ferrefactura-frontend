@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================= */
+/*   CREAR FACTURA – CONTENEDOR  */
+/* ============================= */
+.crearfactura {
+  @apply min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white px-5 md:px-10 pb-28 pt-6;
+}
+
+/* Tarjeta de cada paso */
+.step-card {
+  @apply bg-gray-900/60 border border-gray-800 rounded-2xl shadow-2xl p-4 md:p-6;
+}
+
+/* Buscador */
+.productos-search {
+  @apply w-[320px] max-w-full p-3 rounded-xl bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition;
+}
+
+/* Catálogo: item */
+.cf-product {
+  @apply flex items-center justify-between gap-4 bg-gray-800/70 border border-gray-700 rounded-xl p-4 shadow-md hover:shadow-lg transition duration-200;
+}
+.cf-product h4 { @apply font-semibold text-white; }
+.cf-product .meta { @apply text-xs text-gray-400; }
+
+.btn-agregar {
+  @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow;
+}
+
+/* Carrito/Resumen: bloques */
+.cf-line { @apply bg-gray-800/70 border border-gray-700 rounded-xl p-4 shadow; }
+.meta { @apply text-xs text-gray-400; }
+
+/* ============================= */
+/*    ACTION BAR FIJA INFERIOR   */
+/* ============================= */
+.cf-actionbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  /* Pónganme arriba de TODO (paletas de tema, tooltips, etc) */
+  z-index: 2147483647;
+  @apply bg-gray-900/90 backdrop-blur border-t border-gray-800;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+.cf-actionbar > div:last-child { justify-self: end; }
+.cf-total { @apply text-center text-base md:text-lg font-semibold text-white; }
+
+/* Si tu selector de tema usa estas clases, lo subimos un poco para no pisar el actionbar */
+.theme-switcher,
+.theme-panel,
+.theme-floating {
+  bottom: 88px !important;
+  right: 16px !important;
+  z-index: 9 !important;         /* por debajo del actionbar */
+}
+
+/* En caso de otros nombres comunes (defensivo, opcional) */
+[class*="theme"][class*="panel"],
+[class*="Theme"][class*="panel"],
+[class*="theme"][class*="floating"] {
+  bottom: 88px !important;
+}
+
+/* ============================= */
+/*           ANIMACIÓN           */
+/* ============================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn .35s ease; }
+
+/* ============================= */
+/*     ANT DESIGN – MODO DARK    */
+/* ============================= */
+.ant-input,
+.ant-input-number,
+.ant-select-selector {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e5e7eb !important;
+}
+.ant-input:focus,
+.ant-input-number:focus-within,
+.ant-select-focused .ant-select-selector {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59,130,246,.3) !important;
+}
+.ant-btn-primary {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+.ant-btn-primary:hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}

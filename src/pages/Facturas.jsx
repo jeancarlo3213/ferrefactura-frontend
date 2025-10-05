@@ -1,54 +1,58 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { format } from "date-fns";
 import "../styles/facturasview.css";
 
 function Facturas() {
+  const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [facturas, setFacturas] = useState([]);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  const fetchFacturas = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No hay token de autenticación.");
-
-      const response = await fetch(`${API_URL}/facturas/`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error("No se pudieron obtener las facturas.");
-      const data = await response.json();
-      setFacturas(data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
   useEffect(() => {
-    fetchFacturas();
-  }, []);
+    (async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No hay token de autenticación.");
+        const res = await fetch(`${API_URL}/facturas/`, {
+          headers: { "Content-Type": "application/json", Authorization: `Token ${token}` },
+        });
+        if (!res.ok) throw new Error("No se pudieron obtener las facturas.");
+        const data = await res.json();
+        setFacturas(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setError(e.message);
+      }
+    })();
+  }, [API_URL]);
 
-  const filteredFacturas = facturas.filter((factura) => {
-    const matchesClient = factura.nombre_cliente
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const facturaDate = new Date(factura.fecha_creacion);
-    const matchesDate =
-      (!startDate || facturaDate >= new Date(startDate)) &&
-      (!endDate || facturaDate <= new Date(endDate));
-    return matchesClient && matchesDate;
-  });
+  const filtered = useMemo(() => {
+    return facturas.filter((f) => {
+      const n = (f?.nombre_cliente || "").toLowerCase();
+      const matchClient = n.includes(searchTerm.toLowerCase());
+      const d = new Date(f?.fecha_creacion);
+      const after = !startDate || d >= new Date(startDate);
+      const before = !endDate || d <= new Date(endDate);
+      return matchClient && after && before;
+    });
+  }, [facturas, searchTerm, startDate, endDate]);
 
-  const resetFilters = () => {
+  const totalQ = useMemo(() => {
+    return filtered.reduce((acc, f) => {
+      const sub = (Array.isArray(f.detalles) ? f.detalles : []).reduce(
+        (t, d) => t + (d.cantidad || 0) * parseFloat(d.precio_unitario || 0),
+        0
+      );
+      return acc + sub;
+    }, 0);
+  }, [filtered]);
+
+  const reset = () => {
     setSearchTerm("");
     setStartDate("");
     setEndDate("");
@@ -56,105 +60,104 @@ function Facturas() {
 
   return (
     <div className="facturas-container">
-      <div className="logo-wrapper">
-        <img src="/Logo.jpeg" alt="Logo" className="logo-hero animate-bounce" />
-      </div>
+      <header className="facturas-header">
+        <div className="logo-wrap" aria-hidden="true">
+          <img src="/Logo.jpeg" alt="" />
+        </div>
 
-      <h2 className="facturas-title">Gestión de Facturas</h2>
-      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        <h2 className="facturas-title">Gestión de Facturas</h2>
 
-      <div className="flex justify-center mb-4">
-        <button
-          onClick={() => navigate("/crearfactura")}
-          className="btn-crear-factura"
-        >
+        <button className="btn-accent" onClick={() => navigate("/crearfactura")}>
           <Plus size={18} /> Crear Factura
         </button>
-      </div>
+      </header>
 
-      <div className="filtros-container">
+      {error && <div className="facturas-error">{error}</div>}
+
+      {/* Filtros */}
+      <div className="filtros-shell">
         <input
           type="text"
-          placeholder="Buscar por cliente"
+          className="filtro-input"
+          placeholder="🔎 Buscar por cliente…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="filtro-input"
         />
         <input
           type="date"
+          className="filtro-input"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          className="filtro-input"
         />
         <input
           type="date"
+          className="filtro-input"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
-          className="filtro-input"
         />
-        <button onClick={resetFilters} className="btn-borrar">
-          Borrar Filtros
-        </button>
+        <button className="btn-clear" onClick={reset}>Limpiar</button>
       </div>
 
-      <div className="facturas-table-container">
+      {/* Resumen */}
+      <div className="summary">
+        <div className="chip">
+          <span className="chip-label">Facturas</span>
+          <span className="chip-value">{filtered.length}</span>
+        </div>
+        <div className="chip">
+          <span className="chip-label">Total</span>
+          <span className="chip-value">
+            Q{totalQ.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div className="facturas-table-shell">
         <table className="facturas-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Fecha</th>
-              <th>Cliente</th>
+              <th style={{width:70}}>ID</th>
+              <th style={{width:220}}>Fecha</th>
+              <th style={{width:220}}>Cliente</th>
               <th>Productos</th>
-              <th>Subtotal</th>
-              <th>Acciones</th>
+              <th style={{width:160}}>Subtotal</th>
+              <th className="col-actions">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {filteredFacturas.length > 0 ? (
-              filteredFacturas.map((factura) => (
-                <tr key={factura.id}>
-                  <td>{factura.id}</td>
-                  <td>{format(new Date(factura.fecha_creacion), "dd/MM/yyyy, p")}</td>
-                  <td>{factura.nombre_cliente}</td>
-                  <td>
-                    {factura.detalles.map((detalle) => (
-                      <div key={detalle.id}>
-                        {detalle.producto_nombre} (x{detalle.cantidad})
-                      </div>
-                    ))}
-                  </td>
-                  <td>
-                    Q
-                    {factura.detalles
-                      .reduce(
-                        (total, detalle) =>
-                          total + detalle.cantidad * parseFloat(detalle.precio_unitario),
-                        0
-                      )
-                      .toFixed(2)}
-                  </td>
-                  <td className="flex gap-2">
-                    <button
-                      onClick={() => navigate(`/verfactura/${factura.id}`)}
-                      className="btn-ver"
-                    >
-                      Ver
-                    </button>
-                    <button
-                      onClick={() => navigate(`/editarfactura/${factura.id}`)}
-                      className="btn-actualizar"
-                    >
-                      Actualizar
-                    </button>
-                  </td>
-                </tr>
-              ))
+            {filtered.length === 0 ? (
+              <tr><td colSpan={6} className="empty">No hay facturas registradas</td></tr>
             ) : (
-              <tr>
-                <td colSpan="6" className="text-center text-gray-400 py-4">
-                  No hay facturas registradas
-                </td>
-              </tr>
+              filtered.map((f) => {
+                const subtotal = (Array.isArray(f.detalles) ? f.detalles : []).reduce(
+                  (t, d) => t + (d.cantidad || 0) * parseFloat(d.precio_unitario || 0),
+                  0
+                );
+                return (
+                  <tr key={f.id}>
+                    <td>{f.id}</td>
+                    <td>{f.fecha_creacion ? format(new Date(f.fecha_creacion), "dd/MM/yyyy, p") : "—"}</td>
+                    <td>{f.nombre_cliente || "—"}</td>
+                    <td>
+                      <ul className="prod-list">
+                        {(f.detalles || []).map((d) => (
+                          <li key={d.id}>
+                            {d.producto_nombre} <span className="muted">x{d.cantidad}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      Q{subtotal.toLocaleString("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="td-actions">
+                      <button className="btn-view" onClick={() => navigate(`/verfactura/${f.id}`)}>Ver</button>
+                      <button className="btn-update" onClick={() => navigate(`/editarfactura/${f.id}`)}>Actualizar</button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

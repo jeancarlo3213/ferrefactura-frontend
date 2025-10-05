@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { isAuthenticated, logout } from "../api/auth";
-import "@/styles/navbar.css"; 
+import "@/styles/navbar.css";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -15,14 +15,14 @@ function Navbar() {
 
   const handleLogout = () => {
     logout();
-    setAuthenticated(false);
     localStorage.removeItem("token");
+    setAuthenticated(false);
     navigate("/login");
   };
 
   return (
-    <nav className="navbar no-print">
-      <Link to="/">Inicio</Link>
+    <nav className="navbar">
+      <Link to="/" className="brand">FerreFactura</Link>
       {authenticated ? (
         <button onClick={handleLogout}>Cerrar sesión</button>
       ) : (

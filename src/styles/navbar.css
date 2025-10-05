@@ -1,5 +1,19 @@
-nav {
-    background-color: #333;
-    color: white;
-    padding: 10px;
+.navbar{
+  position: sticky; top:0; z-index:30;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: 10px 16px;
+  display:flex; align-items:center; gap:12px; justify-content:center;
+  color: var(--text);
 }
+.navbar .brand{
+  font-weight:800; letter-spacing:.2px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.navbar a, .navbar button{
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  padding: 8px 12px; border-radius: 12px; color: var(--text);
+}
+.navbar a:hover, .navbar button:hover{ background: rgba(255,255,255,.1) }
