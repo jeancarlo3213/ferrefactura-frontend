@@ -1,0 +1,120 @@
+/* ====== Pantalla (oscuro) ====== */
+.vf-loader{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.vf-container{
+  min-height:100vh;
+  background:
+    radial-gradient(1000px 500px at 0% -20%, rgba(255,255,255,.03), transparent 60%),
+    radial-gradient(1000px 500px at 100% 120%, rgba(255,255,255,.02), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:28px 12px 60px;
+}
+.vf-card{width:min(720px,96%);background:var(--surface);border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+
+.vf-header{text-align:center;margin-bottom:14px}
+.vf-logo{width:84px;height:84px;border-radius:9999px;object-fit:cover;border:4px solid var(--brand);box-shadow:0 0 24px color-mix(in oklab,var(--brand) 55%,transparent);margin:0 auto 8px}
+.vf-title{margin:0;font-weight:900;font-size:clamp(18px,3.8vw,22px);letter-spacing:.3px}
+.vf-sub{margin:2px 0;color:var(--muted)}
+
+.vf-meta{
+  display:grid;gap:6px;grid-template-columns:1fr 1fr;
+  background:var(--surface-2);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;padding:10px 12px;margin:10px 0 12px;font-size:.95rem
+}
+.vf-meta span strong{color:var(--text)}
+@media (max-width:560px){.vf-meta{grid-template-columns:1fr}}
+
+.vf-status{display:inline-flex;gap:6px;background:var(--surface-2);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:6px;margin-bottom:12px}
+.vf-status input{display:none}
+.vf-status label{padding:8px 10px;border-radius:10px;cursor:pointer;color:var(--text);user-select:none;transition:background .15s ease,filter .15s ease;display:flex;align-items:center;gap:8px}
+.vf-status label.active{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;font-weight:800}
+
+/* Tabla */
+.vf-table-wrap{max-height:420px;overflow:auto;border-radius:12px}
+.vf-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface-2);border:1px solid rgba(255,255,255,.08)}
+.vf-table thead th{background:color-mix(in oklab,var(--surface-2) 75%, black);color:var(--text);font-weight:800;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.12)}
+.vf-table thead th.sticky{position:sticky;top:0;z-index:2}
+.vf-table td{padding:10px 12px;border-top:1px solid rgba(255,255,255,.06);vertical-align:middle}
+.vf-row:nth-child(even){background:color-mix(in oklab,var(--surface-2), black 6%)}
+.vf-num{text-align:right;font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum"1,"lnum"1}
+.vf-um{text-align:center;text-transform:uppercase;letter-spacing:.5px}
+.vf-prod{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vf-actions{display:flex;gap:8px;justify-content:center;margin-top:14px}
+.vf-btn{padding:10px 14px;border-radius:12px;font-weight:800;border:1px solid rgba(255,255,255,.14);transition:transform .08s ease,filter .15s ease;display:inline-flex;align-items:center;gap:8px}
+.vf-btn:active{transform:scale(.98)}
+.vf-btn-green{background:#16a34a;color:#fff}
+.vf-btn-blue{background:#2563eb;color:#fff}
+.vf-btn-dark{background:rgba(255,255,255,.06);color:var(--text)}
+.vf-summary{margin-top:12px;display:grid;gap:6px;justify-items:end}
+.vf-summary p{margin:0}
+.vf-total{font-size:1.15rem;font-weight:900}
+
+/* ====== Impresión térmica (58mm) ====== */
+@media print{
+  @page{ size:58mm auto; margin:0 }  /* cambia a 80mm si tu rollo es de 80mm */
+
+  /* Ocultar TODO y mostrar solo el ticket */
+  body{ background:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  body *{ visibility:hidden !important }
+  .ticket-container, .ticket-container *{ visibility:visible !important }
+  .ticket-container{ position:absolute; left:0; top:0; width:58mm; } /* cambia aquí a 80mm si usas 80mm */
+
+  /* No necesitamos sticky en impresión */
+  .vf-table thead th.sticky{ position:static !important }
+
+  /* Forzar modo claro del ticket */
+  .vf-card{ margin:0 auto; border:none; border-radius:0; box-shadow:none; background:#fff; color:#000; padding:6px; font-family:ui-monospace,"Cascadia Mono","SFMono-Regular","Courier New",monospace; font-size:11px; line-height:1.25; letter-spacing:.1px }
+  .vf-header{ margin:0 0 4px; text-align:center }
+  .vf-logo{ width:48px; height:48px; border:2px solid #000; box-shadow:none; filter:grayscale(1) contrast(130%) }
+  .vf-title{ font-size:12px; margin:2px 0 0; color:#000 }
+  .vf-sub{ color:#000; margin:0 }
+
+  .vf-meta{ background:#fff; border:none; padding:0; gap:2px; grid-template-columns:1fr; font-size:11px }
+  .vf-status{ display:none }  /* no imprimir el selector de estado */
+
+  .vf-table-wrap{ max-height:none; overflow:visible }
+  .vf-table{ width:100%; border:none; border-radius:0; background:#fff; font-size:11px; border-collapse:collapse }
+  .vf-table thead th{ border-bottom:1px solid #000; padding:2px 0; background:#fff; color:#000 }
+  .vf-table td{ padding:2px 0; border-bottom:1px dashed #000 }
+  .vf-row:nth-child(even){ background:#fff }
+  .vf-num{ font-variant-numeric:tabular-nums }
+
+  .vf-summary{ font-size:11px; margin-top:4px; gap:2px }
+  .vf-total{ font-size:12px; font-weight:900 }
+
+  /* Por si tu Navbar no tiene .no-print: igual NO aparecerá (queda oculto por visibility) */
+  .no-print{ display:none !important }
+}
+
+/* --- Evitar que el selector de tema tape los botones --- */
+
+/* 1) La actionbar siempre encima de todo */
+.cf-actionbar{
+  z-index: 9999; /* antes era 6 */
+}
+
+/* 2) En la pantalla de crear factura, subimos el widget de tema */
+.crearfactura .theme-switcher,
+.crearfactura .theme-picker,
+.crearfactura .theme-panel,
+.crearfactura .theme-widget,
+.crearfactura [data-theme-widget]{
+  bottom: 120px !important; /* queda por encima de la actionbar */
+  right: 16px !important;
+}
+
+/* 3) Por si en móviles queda muy justo, súbelo un poco más */
+@media (max-width: 768px){
+  .crearfactura .theme-switcher,
+  .crearfactura .theme-picker,
+  .crearfactura .theme-panel,
+  .crearfactura .theme-widget,
+  .crearfactura [data-theme-widget]{
+    bottom: 140px !important;
+  }
+}
+
+/* (opcional) Si quieres mantener el selector abajo, deja hueco a la derecha de los botones
+.crearfactura .cf-actionbar__right{ padding-right: 120px; }
+*/

@@ -1,93 +1,27 @@
-/* ============================= */
-/*     GLOBAL TAILWIND IMPORTS   */
-/* ============================= */
+/* Tailwind (si lo usas). NO importes Bootstrap aquí. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ============================= */
-/*     ESTILOS GENERALES         */
-/* ============================= */
+/* Base que respeta el tema */
+body{ min-height:100vh }
 
-/* Fondo general y color de texto */
-body {
-  @apply bg-gray-900 text-white;
-}
+/* Botones base */
+button{ padding:.5rem 1rem; border-radius:.5rem; font-weight:600; transition: all .15s }
+.btn-primary{ background: var(--brand); color:#fff }
+.btn-primary:hover{ filter: brightness(1.08) }
+.btn-danger{ background: var(--danger); color:#fff }
+.btn-danger:hover{ filter: brightness(1.08) }
 
-/* Botones */
-button {
-  @apply px-4 py-2 rounded-lg font-semibold transition-all;
-}
+/* Tablas base */
+table{ width:100%; border-collapse: collapse; background: var(--surface); color: var(--text); border:1px solid rgba(255,255,255,.08); border-radius: 12px; overflow:hidden }
+th, td{ border-top:1px solid rgba(255,255,255,.08); padding:10px }
+th{ background: var(--surface-2); color: color-mix(in oklab, var(--brand) 55%, #dbeafe) }
 
-.btn-primary {
-  @apply bg-blue-500 hover:bg-blue-700 text-white;
-}
-
-.btn-danger {
-  @apply bg-red-500 hover:bg-red-700 text-white;
-}
-
-/* Animaciones */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-/* ============================= */
-/*     NAVBAR (MENÚ SUPERIOR)    */
-/* ============================= */
-nav {
-  @apply bg-gray-800 text-white p-4 shadow-md;
-}
-
-/* ============================= */
-/*     TABLAS                    */
-/* ============================= */
-table {
-  @apply w-full border-collapse bg-gray-800 text-white rounded-lg shadow-lg;
-}
-
-th, td {
-  @apply border border-gray-700 px-4 py-2;
-}
-
-th {
-  @apply bg-gray-700 text-blue-300 font-semibold;
-}
-
-td {
-  @apply text-gray-200;
-}
-
-/* ============================= */
-/*     IMPRESIÓN (FACTURAS)       */
-/* ============================= */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  @page {
-    size: auto;
-    margin: 0;
-  }
-
-  .ticket-container {
-    max-width: 58mm;
-    width: 100%;
-    padding: 5px;
-    font-size: 10px;
-    background-color: #fff;
-    color: #000;
-    margin: 0 auto;
-  }
+/* Impresión */
+@media print{
+  .no-print{ display:none !important }
+  @page{ size:auto; margin:0 }
+  body{ background:#fff; color:#000; font-size:12px }
+  .ticket-container{ max-width:58mm; width:100%; padding:5px; margin:0 auto }
 }
