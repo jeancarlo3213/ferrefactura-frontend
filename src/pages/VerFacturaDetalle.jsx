@@ -1,19 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Spin, Alert } from "antd";
 import { FaArrowLeft, FaPrint } from "react-icons/fa";
 import "../styles/verfactura.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-const fmtQ = (n) =>
-  `Q${(Number(n) || 0).toLocaleString("es-GT", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-
-const getUM = (precioUnitario) =>
-  parseFloat(precioUnitario) > 100 ? "qq" : "un";
 
 function VerFacturaDetalle() {
   const { id } = useParams();
@@ -26,14 +17,15 @@ function VerFacturaDetalle() {
 
   const token = localStorage.getItem("token");
 
+  // Carga de datos
   useEffect(() => {
-    const fetchFactura = async () => {
+    const run = async () => {
       try {
-        const response = await fetch(`${API_URL}/facturas/${id}/`, {
+        const res = await fetch(`${API_URL}/facturas/${id}/`, {
           headers: { Authorization: `Token ${token}` },
         });
-        if (!response.ok) throw new Error("Error al obtener la factura.");
-        const data = await response.json();
+        if (!res.ok) throw new Error("No se pudo obtener la factura.");
+        const data = await res.json();
         setFactura(data);
       } catch (err) {
         setError(err.message);
@@ -41,84 +33,39 @@ function VerFacturaDetalle() {
         setLoading(false);
       }
     };
-    fetchFactura();
-  }, [id, token]);
+    run();
+  }, [id, token, API_URL]);
 
   const handlePrint = () => window.print();
 
-  const construirTextoImpresion = (f) => {
-    const {
-      nombre_cliente,
-      fecha_creacion,
-      fecha_entrega,
-      costo_envio,
-      descuento_total,
-      detalles = [],
-    } = f;
-    let texto = "====== FERRETERÍA EL CAMPESINO ======\n";
-    texto += "Aldea Mediacuesta\nTel: 57765449 - 34567814\n=====================================\n";
-    texto += `Factura #${f.id}\nCliente: ${nombre_cliente}\nFecha Creación: ${new Date(
-      fecha_creacion
-    ).toLocaleString()}\nFecha Entrega: ${
-      fecha_entrega || "No especificada"
-    }\n\n`;
+  // Helpers
+  const toQ = (n) => `Q${(Number(n) || 0).toFixed(2)}`;
 
-    let subTotal = 0;
-    detalles.forEach((item) => {
-      const precio = parseFloat(item.precio_unitario) || 0;
-      const um = getUM(precio);
-      subTotal += (item.cantidad || 0) * precio;
-      texto += `${item.producto_nombre} (${item.cantidad || 0} ${um})\n`;
-      texto += `P/U: ${fmtQ(precio)} - Subt: ${fmtQ(
-        (item.cantidad || 0) * precio
-      )}\n\n`;
-    });
-
-    const total =
-      subTotal +
-      (parseFloat(costo_envio) || 0) -
-      (parseFloat(descuento_total) || 0);
-    texto += `-------------------------------------\nSubtotal: ${fmtQ(
-      subTotal
-    )}\nCosto Envío: ${fmtQ(parseFloat(costo_envio) || 0)}\nDescuento: ${fmtQ(
-      parseFloat(descuento_total) || 0
-    )}\nTOTAL A PAGAR: ${fmtQ(total)}\n=====================================\n¡Gracias por su compra!\n\n`;
-    return texto;
-  };
-
-  const handleRemotePrint = async () => {
-    if (!factura) return;
-    try {
-      const response = await fetch(`${API_URL}/add_print/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
-        },
-        body: JSON.stringify({ text: construirTextoImpresion(factura) }),
-      });
-      if (response.ok) alert("Orden de impresión enviada al backend.");
-      else alert("Error al enviar la orden de impresión remota.");
-    } catch (error) {
-      console.error("Error al enviar la orden de impresión remota:", error);
-    }
-  };
-
-  if (loading)
+  if (loading) {
     return (
       <div className="vf-loader">
         <Spin tip="Cargando factura..." size="large" />
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
-      <div className="p-4 max-w-md mx-auto">
-        <Alert message="Error" description={error} type="error" showIcon closable />
+      <div className="vf-loader">
+        <Alert
+          message="Error"
+          description={error}
+          type="error"
+          showIcon
+          closable
+        />
       </div>
     );
-  if (!factura)
+  }
+
+  if (!factura) {
     return (
-      <div className="p-4 max-w-md mx-auto">
+      <div className="vf-loader">
         <Alert
           message="Factura no encontrada"
           description={`No se encontró la factura con ID ${id}.`}
@@ -127,117 +74,191 @@ function VerFacturaDetalle() {
         />
       </div>
     );
+  }
 
-  const {
-    nombre_cliente,
-    fecha_creacion,
-    fecha_entrega,
-    costo_envio,
-    descuento_total,
-    detalles = [],
-  } = factura;
+  const { nombre_cliente, fecha_creacion, fecha_entrega, costo_envio, descuento_total, detalles = [] } = factura;
 
-  const subTotal = detalles.reduce(
-    (acc, item) => acc + (item.cantidad || 0) * parseFloat(item.precio_unitario || 0),
-    0
-  );
+  const filas = detalles.map((d) => {
+    const cant = Number(d.cantidad) || 0;
+    const pu = Number(d.precio_unitario) || 0;
+    const subt = cant * pu;
+    // UM heurística (si no viene del backend): U si es precio unitario bajo; qq si es alto
+    const um = pu >= 100 ? "qq" : "U";
+    return {
+      cant,
+      um,
+      nombre: d.producto_nombre || "",
+      pu,
+      subt,
+    };
+  });
+
+  const subtotal = filas.reduce((acc, f) => acc + f.subt, 0);
   const total =
-    subTotal +
-    (parseFloat(costo_envio) || 0) -
-    (parseFloat(descuento_total) || 0);
+    subtotal + (Number(costo_envio) || 0) - (Number(descuento_total) || 0);
 
   return (
     <div className="vf-container">
-      <div className="vf-card ticket-container">
-        {/* Header del ticket */}
+      {/* ====== Vista de pantalla (bonita) ====== */}
+      <div className="vf-card-screen">
         <header className="vf-header">
-          <div className="flex justify-center">
-            <img src="/Logo.jpeg" alt="Logo" className="vf-logo" />
-          </div>
-          <h2 className="vf-title">FERRETERÍA EL CAMPESINO</h2>
-          <p className="vf-sub">Aldea Mediacuesta</p>
-          <p className="vf-sub">Tel: 57765449 - 34567814</p>
+          <img src="/Logo.jpeg" alt="Logo" className="vf-logo" />
+          <h1 className="vf-title">FERRETERÍA EL CAMPESINO</h1>
+          <p className="vf-sub">Aldea Mediacuesta — Tel: 57765449 / 34567814</p>
         </header>
 
-        {/* Meta */}
         <section className="vf-meta">
-          <span><strong>Factura #{id}</strong></span>
+          <span><strong>Factura:</strong> #{id}</span>
           <span><strong>Cliente:</strong> {nombre_cliente}</span>
-          <span><strong>Creación</strong> {new Date(fecha_creacion).toLocaleString()}</span>
-          <span><strong>Entrega</strong> {fecha_entrega || "No especificada"}</span>
+          <span>
+            <strong>Creación:</strong>{" "}
+            {new Date(fecha_creacion).toLocaleString()}
+          </span>
+          <span>
+            <strong>Entrega:</strong>{" "}
+            {fecha_entrega || "No especificada"}
+          </span>
         </section>
 
-        {/* Estado manual */}
         <div className="vf-status">
-          <label className={estado === "pendiente" ? "active" : ""}>
-            <input type="checkbox" checked={estado === "pendiente"} onChange={() => setEstado("pendiente")} />
+          <label
+            className={`chip ${estado === "pendiente" ? "active" : ""}`}
+            onClick={() => setEstado("pendiente")}
+          >
             Pendiente
           </label>
-          <label className={estado === "cancelado" ? "active" : ""}>
-            <input type="checkbox" checked={estado === "cancelado"} onChange={() => setEstado("cancelado")} />
+          <label
+            className={`chip ${estado === "cancelado" ? "active" : ""}`}
+            onClick={() => setEstado("cancelado")}
+          >
             Cancelado
           </label>
         </div>
 
-        {/* Tabla: Cant primero */}
         <div className="vf-table-wrap">
           <table className="vf-table">
             <colgroup>
-              <col style={{ width: "14%" }} /> {/* Cant */}
-              <col style={{ width: "10%" }} /> {/* UM */}
-              <col style={{ width: "46%" }} /> {/* Producto */}
-              <col style={{ width: "15%" }} /> {/* P/U */}
-              <col style={{ width: "15%" }} /> {/* Subt */}
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "48%" }} />
+              <col style={{ width: "16%" }} />
+              <col style={{ width: "16%" }} />
             </colgroup>
-
             <thead>
               <tr>
-                <th className="sticky right">Cant</th>
-                <th className="sticky center">UM</th>
+                <th className="sticky">Cant</th>
+                <th className="sticky">UM</th>
                 <th className="sticky">Producto</th>
-                <th className="sticky right">P/U</th>
-                <th className="sticky right">Subt</th>
+                <th className="sticky">P/U</th>
+                <th className="sticky">Subt</th>
               </tr>
             </thead>
-
             <tbody>
-              {detalles.map((item, idx) => {
-                const pu = parseFloat(item.precio_unitario) || 0;
-                const um = getUM(pu);
-                const filaSub = (item.cantidad || 0) * pu;
-                return (
-                  <tr className="vf-row" key={idx}>
-                    <td className="vf-num">{item.cantidad ?? 0}</td>
-                    <td className="vf-um">{um}</td>
-                    <td className="vf-prod" title={item.producto_nombre}>{item.producto_nombre}</td>
-                    <td className="vf-num">{fmtQ(pu)}</td>
-                    <td className="vf-num">{fmtQ(filaSub)}</td>
-                  </tr>
-                );
-              })}
+              {filas.map((f, i) => (
+                <tr key={i} className="vf-row">
+                  <td className="vf-num">{f.cant}</td>
+                  <td className="vf-um">{f.um}</td>
+                  <td className="vf-prod">{f.nombre}</td>
+                  <td className="vf-num">{toQ(f.pu)}</td>
+                  <td className="vf-num">{toQ(f.subt)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Totales */}
-        <div className="vf-summary">
-          <p>Subtotal: {fmtQ(subTotal)}</p>
-          <p>Costo Envío: {fmtQ(parseFloat(costo_envio) || 0)}</p>
-          <p>Descuento: {fmtQ(parseFloat(descuento_total) || 0)}</p>
-          <p className="vf-total">Total: {fmtQ(total)}</p>
-        </div>
+        <section className="vf-summary">
+          <p>
+            <strong>Subtotal: </strong>
+            {toQ(subtotal)}
+          </p>
+          <p>
+            <strong>Costo Envío (Q): </strong>
+            {toQ(costo_envio)}
+          </p>
+          <p>
+            <strong>Descuento: </strong>
+            {toQ(descuento_total)}
+          </p>
+          <p className="vf-total">
+            <strong>Total: </strong>
+            {toQ(total)}
+          </p>
+        </section>
 
-        {/* Acciones (no se imprimen) */}
-        <div className="vf-actions no-print">
-          <button onClick={() => navigate("/facturas")} className="vf-btn vf-btn-dark">
+        <p className="vf-verse">
+          “Pon en manos del Señor todas tus obras.” — Proverbios 16:3
+        </p>
+
+        <div className="vf-actions">
+          <button className="vf-btn vf-btn-dark" onClick={() => navigate("/facturas")}>
             <FaArrowLeft /> Volver
           </button>
-          <button onClick={handlePrint} className="vf-btn vf-btn-green">
-            <FaPrint /> Imprimir Local
+          <button className="vf-btn vf-btn-green" onClick={handlePrint}>
+            <FaPrint /> Imprimir
           </button>
-          <button onClick={handleRemotePrint} className="vf-btn vf-btn-blue">
-            <FaPrint /> Imprimir Remota
-          </button>
+        </div>
+      </div>
+
+      {/* ====== Ticket para impresión térmica (80mm) ======
+           NOTA: en pantalla está oculto; en @media print se muestra y se imprime solo esta parte. */}
+      <div id="ticket">
+        <div className="tk-box">
+          <div className="tk-header">
+            <img src="/Logo.jpeg" alt="Logo" className="tk-logo" />
+            <div className="tk-store">FERRETERÍA EL CAMPESINO</div>
+            <div className="tk-sub">Aldea Mediacuesta – Tel: 57765449 / 34567814</div>
+          </div>
+
+          <div className="tk-meta">
+            <div><b>Factura:</b> #{id}</div>
+            <div><b>Cliente:</b> {nombre_cliente}</div>
+            <div><b>Creación:</b> {new Date(fecha_creacion).toLocaleString()}</div>
+            <div><b>Entrega:</b> {fecha_entrega || "No especificada"}</div>
+          </div>
+
+          <table className="tk-table">
+            <colgroup>
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "10%" }} />
+              <col style={{ width: "46%" }} />
+              <col style={{ width: "16%" }} />
+              <col style={{ width: "16%" }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Can</th>
+                <th>UM</th>
+                <th>Producto</th>
+                <th>P/U</th>
+                <th>Subt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filas.map((f, i) => (
+                <tr key={i}>
+                  <td className="num">{f.cant}</td>
+                  <td className="um">{f.um}</td>
+                  <td className="prod">{f.nombre}</td>
+                  <td className="num">{toQ(f.pu)}</td>
+                  <td className="num">{toQ(f.subt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="tk-sep" />
+
+          <div className="tk-totals">
+            <div><span>Subtotal:</span><b>{toQ(subtotal)}</b></div>
+            <div><span>Costo Envío (Q):</span><b>{toQ(costo_envio)}</b></div>
+            <div><span>Descuento:</span><b>{toQ(descuento_total)}</b></div>
+            <div className="tk-total"><span>Total:</span><b>{toQ(total)}</b></div>
+          </div>
+
+          <div className="tk-verse">
+            “Pon en manos del Señor todas tus obras.” — Proverbios 16:3
+          </div>
         </div>
       </div>
     </div>

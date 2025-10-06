@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================= */
+/*   TICKET – PANTALLA PREVIA    */
+/* ============================= */
+.ticket-container {
+  max-width: 58mm;               /* misma medida que la impresora */
+  margin: 12px auto;
+  background: #111827;           /* preview oscuro */
+  color: #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+}
+.ticket-paper {
+  background: #fff;
+  color: #000;
+  padding: 8px 8px 10px 8px;
+  border-radius: 6px;
+  font-family: "Roboto Mono","Courier New",monospace;
+  font-size: 11.2px;
+  line-height: 1.25;
+  -webkit-font-smoothing: none;  /* se ve más “tinta” en térmica */
+  text-rendering: optimizeSpeed;
+}
+
+/* Encabezado */
+.ticket-title { text-align:center; font-weight:800; margin: 2px 0 2px }
+.ticket-sub { text-align:center; font-size:10px; margin-bottom:6px }
+
+/* Tabla */
+.ticket-table { width: 100%; border-collapse: collapse; table-layout: fixed }
+.ticket-table thead th {
+  text-align:left; border-bottom:1px dashed #000; padding:2px 0 3px 0; font-weight:700
+}
+.ticket-table td { padding:2px 0; vertical-align:top }
+.col-qty  { width: 10mm; text-align:right }
+.col-um   { width: 8mm;  text-align:left  }
+.col-name { width: auto; word-break: break-word }
+.col-price{ width: 14mm; text-align:right }
+.col-sub  { width: 14mm; text-align:right }
+.sep { border-bottom:1px dashed #000; margin:6px 0 }
+
+/* Totales */
+.ticket-totals { margin-top:6px; }
+.ticket-totals .row { display:flex; justify-content:space-between; padding:2px 0 }
+.ticket-total { font-weight:800; font-size:12px; }
+
+/* Frase final */
+.ticket-verse { text-align:center; margin-top:8px; font-size:10px; font-style:italic }
+
+/* Ocultar UI en print sí o sí */
+@media print {
+  @page { size: 58mm auto; margin: 0 }
+  html, body { margin:0 !important; padding:0 !important; background:#fff !important }
+  /* Si usas 80mm, cambia a 80mm arriba y acá */
+  .ticket-container { max-width: none; border-radius:0; padding:0; margin:0 auto }
+  .ticket-paper {
+    width: 58mm;                 /* o 80mm si tu rollo es 80 */
+    margin: 0 auto;
+    background:#fff !important;
+    color:#000 !important;
+    -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+  }
+
+  /* Tipos de navegación y temas */
+  nav, .navbar, .no-print, .theme-switcher, .theme-panel, [class*="theme"][class*="panel"] {
+    display: none !important;
+  }
+
+  /* Acentuar texto en térmica */
+  .ticket-title, .ticket-total, thead th { font-weight:900 }
+  .ticket-table td, .ticket-table th { color:#000 !important }
+}

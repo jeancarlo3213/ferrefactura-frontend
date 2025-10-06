@@ -101,3 +101,140 @@
   background: #1d4ed8 !important;
   border-color: #1d4ed8 !important;
 }
+
+
+/* ============ FIX: texto de inputs bien visible en modo dark ============ */
+/* Aplica dentro de CrearFactura únicamente */
+.crearfactura input,
+.crearfactura input[type="number"],
+.crearfactura .ant-input,
+.crearfactura .ant-input input,
+.crearfactura .ant-input-affix-wrapper input,
+.crearfactura .ant-input-number,
+.crearfactura .ant-input-number input,
+.crearfactura .ant-input-number-input-wrap input,
+.crearfactura .ant-select-selector .ant-select-selection-item,
+.crearfactura .ant-picker input {
+  background-color: #0f172a !important;   /* slate-900 */
+  border-color: #334155 !important;       /* slate-600 */
+  color: #e5e7eb !important;              /* gray-200 */
+  -webkit-text-fill-color: #e5e7eb !important; /* WebKit (Chrome/Safari) */
+  caret-color: #e5e7eb !important;
+}
+
+/* Placeholders contrastados */
+.crearfactura .ant-input::placeholder,
+.crearfactura .ant-input-number input::placeholder,
+.crearfactura .ant-input-affix-wrapper input::placeholder,
+.crearfactura .ant-picker input::placeholder {
+  color: #9aa3b2 !important;
+  opacity: 1 !important;
+}
+
+/* Focus ring visible */
+.crearfactura .ant-input:focus,
+.crearfactura .ant-input-affix-wrapper-focused,
+.crearfactura .ant-input-number-focused,
+.crearfactura .ant-input-number:focus-within,
+.crearfactura .ant-select-focused .ant-select-selector,
+.crearfactura .ant-picker-focused {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59,130,246,.30) !important;
+}
+
+/* Deshabilitados pero legibles */
+.crearfactura .ant-input[disabled],
+.crearfactura .ant-input-affix-wrapper-disabled input,
+.crearfactura .ant-input-number-disabled .ant-input-number-input,
+.crearfactura .ant-picker-disabled input {
+  background: #0a0f1a !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  opacity: 1 !important;
+}
+
+/* Safari/Chrome autofill en dark */
+.crearfactura input:-webkit-autofill,
+.crearfactura input:-webkit-autofill:hover,
+.crearfactura input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+  -webkit-text-fill-color: #e5e7eb !important;
+  caret-color: #e5e7eb !important;
+}
+
+/* Inputs dentro de modales Ant */
+.crearfactura .ant-modal .ant-input,
+.crearfactura .ant-modal .ant-input-number,
+.crearfactura .ant-modal .ant-input-number-input,
+.crearfactura .ant-modal .ant-input-affix-wrapper input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e5e7eb !important;
+  -webkit-text-fill-color: #e5e7eb !important;
+}
+/* ============================= */
+/*  ANT MODAL – CAMPOS LEGIBLES  */
+/* ============================= */
+.ant-modal .ant-modal-content {
+  background-color: #0b1220;        /* fondo modal dark */
+  color: #e5e7eb;
+  border: 1px solid #1f2937;
+}
+.ant-modal .ant-modal-header {
+  background-color: #0b1220;
+  border-bottom: 1px solid #1f2937;
+}
+.ant-modal .ant-modal-title { color: #e5e7eb; }
+.ant-modal .ant-modal-close-x { color: #94a3b8; }
+
+/* Etiquetas del form dentro del modal */
+.ant-modal .ant-form-item-label > label {
+  color: #cbd5e1 !important;
+}
+
+/* Wrappers de inputs en el modal */
+.ant-modal .ant-input,
+.ant-modal .ant-input-affix-wrapper,
+.ant-modal .ant-input-number,
+.ant-modal .ant-input-number-affix-wrapper {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e5e7eb !important;
+}
+
+/* El input real de Ant InputNumber */
+.ant-modal .ant-input-number-input,
+.ant-modal input {
+  color: #e5e7eb !important;
+  caret-color: #e5e7eb !important;
+  -webkit-text-fill-color: #e5e7eb !important; /* Safari/Chromium */
+}
+
+/* Placeholder legible */
+.ant-modal .ant-input-number-input::placeholder,
+.ant-modal input::placeholder {
+  color: #9aa4b2 !important;
+  opacity: 0.9 !important;
+}
+
+/* Foco/ring accesible en dark */
+.ant-modal .ant-input:focus,
+.ant-modal .ant-input-affix-wrapper-focused,
+.ant-modal .ant-input-number:focus-within,
+.ant-modal .ant-input-number-affix-wrapper-focused {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59,130,246,.35) !important;
+}
+
+/* Botones del modal */
+.ant-modal .ant-btn {
+  color: #e5e7eb;
+}
+.ant-modal .ant-btn-primary {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+.ant-modal .ant-btn-primary:hover {
+  background: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
