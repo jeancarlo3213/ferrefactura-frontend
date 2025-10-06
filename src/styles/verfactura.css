@@ -11,7 +11,6 @@
   --brand:#7c3aed;
   --brand-2:#3b82f6;
   --ok:#16a34a;
-  --warn:#f59e0b;
   --border:rgba(255,255,255,.08);
   --shadow:0 10px 30px rgba(0,0,0,.35);
 }
@@ -38,54 +37,51 @@
   padding:18px;
 }
 
-.vf-header{
-  text-align:center;
-  margin-bottom:12px;
-}
+.vf-header{ text-align:center; margin-bottom:12px; }
 .vf-logo{
   width:92px;height:92px;border-radius:9999px;
   object-fit:cover;border:4px solid var(--brand);
   box-shadow:0 0 24px color-mix(in oklab, var(--brand) 55%, transparent);
   margin:0 auto 6px;
 }
-.vf-title{margin:0;font-weight:900;font-size:clamp(22px,4.4vw,28px);letter-spacing:.3px}
-.vf-sub{margin:2px 0;color:var(--muted);font-weight:600}
+.vf-title{ margin:0; font-weight:900; font-size:clamp(22px,4.4vw,28px); letter-spacing:.3px; }
+.vf-sub{ margin:2px 0; color:var(--muted); font-weight:600; }
 
 .vf-meta{
-  display:grid;gap:8px;grid-template-columns:1fr 1fr;
+  display:grid; gap:8px; grid-template-columns:1fr 1fr;
   background:color-mix(in oklab, var(--surface) 80%, black);
   border:1px solid var(--border);
-  border-radius:12px;padding:12px;margin:12px 0 10px;
+  border-radius:12px; padding:12px; margin:12px 0 10px;
 }
-.vf-meta span strong{color:var(--text)}
+.vf-meta span strong{ color:var(--text) }
 @media (max-width:640px){ .vf-meta{ grid-template-columns:1fr } }
 
 .vf-status{
-  display:inline-flex;gap:6px;
+  display:inline-flex; gap:6px;
   background:color-mix(in oklab, var(--surface) 86%, black);
-  border:1px solid var(--border);border-radius:12px;padding:6px;margin:6px 0 12px;
+  border:1px solid var(--border); border-radius:12px; padding:6px; margin:6px 0 12px;
 }
-.vf-status input{display:none}
+.vf-status input{ display:none; }
 .vf-status label{
-  padding:8px 10px;border-radius:10px;cursor:pointer;color:var(--text);
-  user-select:none;transition:background .15s ease,filter .15s ease;
-  display:flex;align-items:center;gap:8px;font-weight:700
+  padding:8px 10px; border-radius:10px; cursor:pointer; color:var(--text);
+  user-select:none; transition:background .15s ease,filter .15s ease;
+  display:flex; align-items:center; gap:8px; font-weight:700;
 }
-.vf-status label.active{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff}
+.vf-status label.active{ background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff; }
 
-.vf-table-wrap{max-height:480px;overflow:auto;border-radius:12px}
+.vf-table-wrap{ max-height:480px; overflow:auto; border-radius:12px; }
 .vf-table{
-  width:100%;border-collapse:separate;border-spacing:0;
+  width:100%; border-collapse:separate; border-spacing:0;
   background:color-mix(in oklab, var(--surface) 80%, black);
-  border:1px solid var(--border);table-layout:fixed;
+  border:1px solid var(--border); table-layout:fixed;
   font-variant-numeric:tabular-nums lining-nums; font-feature-settings:"tnum" 1,"lnum" 1;
 }
 .vf-table thead th{
   background:color-mix(in oklab, var(--surface) 85%, black);
-  color:var(--text);font-weight:900;padding:12px 10px;border-bottom:1px solid var(--border);
+  color:var(--text); font-weight:900; padding:12px 10px; border-bottom:1px solid var(--border);
 }
 .vf-table td{
-  padding:12px 10px;border-top:1px solid rgba(255,255,255,.06);vertical-align:middle
+  padding:12px 10px; border-top:1px solid rgba(255,255,255,.06); vertical-align:middle;
 }
 .vf-row:nth-child(even){ background:color-mix(in oklab, var(--surface) 78%, black 6%) }
 
@@ -98,90 +94,105 @@
 .col-unit{ width:16%; text-align:right }
 .col-subt{ width:16%; text-align:right }
 
-/* Resumen totales */
-.vf-summary{
-  margin-top:14px;display:grid;gap:6px;justify-items:end
-}
-.vf-summary p{margin:0;font-weight:700}
+/* Totales */
+.vf-summary{ margin-top:14px; display:grid; gap:6px; justify-items:end }
+.vf-summary p{ margin:0; font-weight:700 }
 .vf-total{
-  margin-top:2px;font-size:1.25rem;font-weight:900;
+  margin-top:2px; font-size:1.25rem; font-weight:900;
   background:linear-gradient(90deg, rgba(124,58,237,.25), rgba(59,130,246,.25));
-  padding:8px 12px;border-radius:12px;
+  padding:8px 12px; border-radius:12px;
 }
 
-.vf-verse{
-  margin-top:14px;text-align:center;font-style:italic;color:var(--text);
-  font-weight:700
-}
+.vf-verse{ margin-top:14px; text-align:center; font-style:italic; color:var(--text); font-weight:700 }
 
-.vf-actions{
-  display:flex;gap:10px;justify-content:center;margin-top:18px
-}
+.vf-actions{ display:flex; gap:10px; justify-content:center; margin-top:18px }
 .vf-btn{
-  padding:12px 18px;border-radius:12px;font-weight:800;border:1px solid var(--border);
-  display:inline-flex;align-items:center;gap:8px;transition:transform .08s ease,filter .15s ease
+  padding:12px 18px; border-radius:12px; font-weight:800; border:1px solid var(--border);
+  display:inline-flex; align-items:center; gap:8px; transition:transform .08s ease,filter .15s ease;
 }
-.vf-btn:active{transform:scale(.98)}
-.vf-btn-dark{background:rgba(255,255,255,.06);color:var(--text)}
-.vf-btn-green{background:var(--ok);color:#fff;border-color:rgba(22,163,74,.35)}
-.vf-btn-blue{background:#2563eb;color:#fff;border-color:rgba(37,99,235,.35)}
+.vf-btn:active{ transform:scale(.98) }
+.vf-btn-dark{ background:rgba(255,255,255,.06); color:var(--text) }
+.vf-btn-green{ background:var(--ok); color:#fff; border-color:rgba(22,163,74,.35) }
+.vf-btn-blue{ background:#2563eb; color:#fff; border-color:rgba(37,99,235,.35) }
 
 .no-print{}
 
 /* ===========================
-   IMPRESIÓN TÉRMICA – 80 mm
+   IMPRESIÓN TÉRMICA – 78 mm
    =========================== */
 @media print{
-  @page{ size:80mm auto; margin:0 }
+  /* 7.8 cm = 78 mm */
+  @page{ size:78mm auto; margin:0 }
 
-  body{ background:#fff !important; color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  body{
+    background:#fff !important; color:#000 !important;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
   body *{ visibility:hidden !important }
 
-  /* Área de ticket con margen de seguridad para que no se corte la 1ª letra */
+  /* Ticket visible y con márgenes de seguridad (que no corte letras) */
   .ticket-container, .ticket-container *{ visibility:visible !important }
   .ticket-container{
     position:absolute; left:0; top:0;
-    padding:4mm;                      /* margen seguro */
-    width:calc(80mm - 8mm);           /* 80mm – márgenes izq/der */
+    padding:5mm 5mm 4mm 5mm;                 /* margen: izq 5mm */
+    width:calc(78mm - 10mm);                 /* ancho util */
     background:#fff; color:#000; border:none; box-shadow:none; margin:0;
     font-family:ui-monospace,"Cascadia Mono","SFMono-Regular","Courier New",monospace;
     font-size:12px; line-height:1.28; letter-spacing:0;
   }
 
-  .vf-card{ background:#fff;border:none;padding:0 }
+  .vf-card{ background:#fff; border:none; padding:0 }
   .vf-header{ margin:0 0 2mm; text-align:center }
-  .vf-logo{ width:22mm; height:22mm; border:0; box-shadow:none; margin:0 auto 1mm }
+  .vf-logo{ width:22mm; height:22mm; border:0; box-shadow:none; margin:0 auto 1mm; filter:grayscale(1) contrast(130%); }
   .vf-title{ font-size:13px; font-weight:900; margin:0 }
   .vf-sub{ margin:0; font-weight:600 }
 
-  /* Meta en una sola columna para que no salte “a. m.” a otra línea */
-  .vf-meta{ grid-template-columns:1fr; gap:1mm; background:#fff; border:none; padding:0; margin:2mm 0 2mm; font-size:12px; font-weight:600; white-space:nowrap }
+  /* Meta en una sola columna para que no salte “a. m.” */
+  .vf-meta{
+    grid-template-columns:1fr; gap:1mm; background:#fff; border:none;
+    padding:0; margin:2mm 0 2mm; font-size:12px; font-weight:600; white-space:nowrap;
+    color:#000 !important;
+  }
 
-  .vf-status{ display:none }  /* no imprimir selector de estado */
+  .vf-status{ display:none }
 
-  .vf-table{ width:100%; border:none; background:#fff; border-collapse:collapse; table-layout:fixed }
+  .vf-table-wrap{ max-height:none; overflow:visible }
+
+  /* Tabla alta legibilidad (auto => no recorta) */
+  .vf-table{
+    width:100%; border:none; background:#fff;
+    border-collapse:collapse; table-layout:auto;
+  }
+
+  /* Todo el texto del ticket en NEGRO, sin grises */
+  .vf-table th, .vf-table td{ color:#000 !important; }
+
   .vf-table thead th{
-    background:#fff; color:#000; border-bottom:1px solid #000;
-    padding:1.3mm 0; font-weight:900; white-space:nowrap;
+    background:#fff !important; color:#000 !important;
+    border-bottom:1px solid #000; padding:1.3mm 0; font-weight:900; white-space:nowrap;
   }
   .vf-table td{
-    padding:1.3mm 0; border-bottom:1px dashed #000; white-space:nowrap; font-weight:600
+    padding:1.3mm 0; border-bottom:1px dashed #000;
+    white-space:nowrap; font-weight:600; background:#fff !important;
   }
+  .vf-row:nth-child(even){ background:#fff !important }
 
-  /* Columnas (sin UM) – más aire a “Descripción” y encabezado desplazado */
+  /* Anchos y alineaciones sin UM */
   .col-cant{ width:10% !important; text-align:center !important }
-  .col-desc{ width:58% !important; padding-left:3mm !important; white-space:normal !important }
+  .col-desc{ width:58% !important; padding-left:3mm !important; white-space:normal !important; word-break:break-word !important; }
   .vf-table thead th.col-desc{ padding-left:3mm !important; }
   .col-unit{ width:16% !important; text-align:right !important }
   .col-subt{ width:16% !important; text-align:right !important }
 
-  .vf-row:nth-child(even){ background:#fff }
-
+  /* Totales */
   .vf-summary{ margin-top:2mm; gap:1mm; font-weight:700 }
-  .vf-summary p{ font-size:12px; white-space:nowrap }
-  .vf-total{ font-size:14px; font-weight:900; background:#fff; padding:0 }
+  .vf-summary p{ font-size:12px; white-space:nowrap; color:#000 !important; }
+  .vf-total{ font-size:14px; font-weight:900; background:#fff; padding:0; color:#000 !important; }
 
-  .vf-verse{ margin-top:3mm; text-align:center; font-style:italic; color:#000; font-weight:700 }
+  .vf-verse{
+    margin-top:3mm; text-align:center; font-style:italic;
+    color:#000 !important; font-weight:700;
+  }
 
   .no-print{ display:none !important }
 }
