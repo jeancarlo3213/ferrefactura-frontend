@@ -11,7 +11,7 @@
   --surface-2: #111827;
   --text: #e5e7eb;
   --muted: #9ca3af;
-  --brand: #22c55e;    /* verde */
+  --brand: #22c55e;
   --brand-2: #16a34a;
   --shadow: 0 10px 30px rgba(0,0,0,.35);
 }
@@ -30,7 +30,7 @@
     radial-gradient(950px 460px at 100% 120%, rgba(59,130,246,.07), transparent 60%),
     var(--bg);
   display:flex;align-items:flex-start;justify-content:center;
-  padding:28px 14px 28px;
+  padding:28px 14px;
 }
 
 /* tarjeta de pantalla */
@@ -109,9 +109,8 @@
 /* oculto en pantalla */
 #ticket{ display:none; }
 
-/* ticket styles */
 #ticket .tk-box{
-  width:80mm;               /* 80 mm de ancho de rollo */
+  width:80mm;
   margin:0 auto;
   background:#fff; color:#000;
   font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", "Courier New", monospace;
@@ -121,7 +120,7 @@
 #ticket .tk-header{ text-align:center; margin-bottom:6px }
 #ticket .tk-logo{
   width:54px;height:54px;border-radius:9999px;object-fit:cover;
-  border:2px solid #000; filter:grayscale(1) contrast(130%)
+  border:2px solid #000; filter:grayscale(1) contrast(130%);
 }
 #ticket .tk-store{ font-weight:900; margin-top:4px }
 #ticket .tk-sub{ margin-top:2px }
@@ -129,15 +128,9 @@
 #ticket .tk-meta div{ margin:1px 0 }
 #ticket .tk-sep{ border-top:1px dashed #000; margin:6px 0 }
 
-#ticket .tk-table{
-  width:100%; border-collapse:collapse; table-layout:fixed;
-}
-#ticket .tk-table th{
-  text-align:left; border-bottom:1px solid #000; padding:2px 0;
-}
-#ticket .tk-table td{
-  padding:2px 0; border-bottom:1px dashed #000; vertical-align:top;
-}
+#ticket .tk-table{ width:100%; border-collapse:collapse; table-layout:fixed; }
+#ticket .tk-table th{ text-align:left; border-bottom:1px solid #000; padding:2px 0; background:#fff; color:#000; }
+#ticket .tk-table td{ padding:2px 0; border-bottom:1px dashed #000; vertical-align:top; background:#fff; color:#000; }
 #ticket .tk-table td.num{ text-align:right }
 #ticket .tk-table td.um{ text-align:center }
 #ticket .tk-table td.prod{ white-space:normal; overflow:hidden; word-break:break-word }
@@ -150,19 +143,40 @@
 /*           IMPRESIÓN             */
 /* =============================== */
 @media print {
-  @page { size: 80mm auto; margin: 0 }   /* papel de 80 mm */
+  /* Papel 80mm y SIN márgenes */
+  @page { size: 80mm auto; margin: 0 }
 
-  /* Oculta todo lo demás en impresión */
+  /* 1) Ocultar absolutamente todo */
+  body * { visibility: hidden !important; }
+
+  /* 2) Mostrar SOLO el ticket y su contenido */
+  #ticket, #ticket * { visibility: visible !important; }
+
+  /* 3) Quitar por completo fondos y sombras para evitar “manchones” */
+  #ticket, #ticket * {
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-color: #000 !important; /* conservamos líneas */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 4) Posicionar el ticket arriba-izquierda y al ancho exacto */
+  #ticket {
+    display:block !important;
+    position: fixed;
+    left: 0; top: 0;
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 5) Aseguramos que la tarjeta de pantalla JAMÁS se imprima */
   .vf-card-screen,
-  .navbar,
-  header,
-  footer,
-  .theme-switcher,
-  .theme-panel,
-  .theme-widget,
-  [data-theme-widget] { display:none !important; }
-
-  /* Solo se imprime el ticket */
-  #ticket { display:block !important; }
-  body { background:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .navbar, header, footer,
+  .theme-switcher, .theme-panel, .theme-widget, [data-theme-widget] {
+    display: none !important;
+  }
 }
