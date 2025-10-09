@@ -6,7 +6,7 @@ import "../styles/verfactura.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Helper: Formatea a Q con 2 decimales
+// Q con 2 decimales
 const q = (n) => `Q${Number(n || 0).toFixed(2)}`;
 
 function VerFactura() {
@@ -20,7 +20,7 @@ function VerFactura() {
 
   useEffect(() => {
     let alive = true;
-    const fetchFactura = async () => {
+    (async () => {
       try {
         const res = await fetch(`${API_URL}/facturas/${id}/`, {
           headers: { Authorization: `Token ${token}` },
@@ -33,35 +33,27 @@ function VerFactura() {
       } finally {
         if (alive) setLoading(false);
       }
-    };
-    fetchFactura();
+    })();
     return () => { alive = false; };
   }, [id, token]);
 
-  const {
-    nombre_cliente,
-    fecha_creacion,
-    fecha_entrega,
-    costo_envio,
-    descuento_total,
-    detalles = [],
-  } = factura || {};
-
-  // Cálculos en memo para evitar recomputar
-  const { subtotal, total } = useMemo(() => {
-    const sub = (detalles || []).reduce(
+  // ⚠️ Todos los hooks arriba, sin condiciones
+  const detalles = useMemo(() => (factura?.detalles ?? []), [factura]);
+  const subtotal = useMemo(
+    () => detalles.reduce(
       (acc, d) => acc + Number(d.cantidad) * Number(d.precio_unitario),
       0
-    );
-    const tot = sub + Number(costo_envio || 0) - Number(descuento_total || 0);
-    return { subtotal: sub, total: tot };
-  }, [detalles, costo_envio, descuento_total]);
-
-  const VERSE =
-    "Pon en manos del SEÑOR todas tus obras y tus proyectos se cumplirán. — Proverbios 16:3";
+    ),
+    [detalles]
+  );
+  const total = useMemo(
+    () => subtotal + Number(factura?.costo_envio || 0) - Number(factura?.descuento_total || 0),
+    [subtotal, factura?.costo_envio, factura?.descuento_total]
+  );
 
   const handlePrint = () => window.print();
 
+  // Ahora sí, retornos condicionales
   if (loading) {
     return (
       <div className="vf-loader">
@@ -91,31 +83,30 @@ function VerFactura() {
     );
   }
 
-  // Fechas legibles para GT (evita saltos “a. m.” en ticket usando texto plano)
-  const fechaCreacionTxt = new Date(fecha_creacion).toLocaleString("es-GT", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }).replaceAll(",", "");
-
-  const fechaEntregaTxt = fecha_entrega
-    ? new Date(fecha_entrega).toLocaleDateString("es-GT", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
+  // Datos seguros
+  const nombre_cliente = factura.nombre_cliente || "Consumidor final";
+  const fechaCreacionTxt = new Date(factura.fecha_creacion)
+    .toLocaleString("es-GT", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: true,
+    })
+    .replace(",", ""); // evita salto raro de 'a. m.'
+  const fechaEntregaTxt = factura.fecha_entrega
+    ? new Date(factura.fecha_entrega).toLocaleDateString("es-GT", {
+        year: "numeric", month: "2-digit", day: "2-digit",
       })
     : "No especificada";
 
+  const VERSE =
+    "Pon en manos del SEÑOR todas tus obras y tus proyectos se cumplirán. — Proverbios 16:3";
+
   return (
     <div className="vf-container">
-      {/* Tarjeta en pantalla y también base del ticket */}
+      {/* Tarjeta (pantalla) y base del ticket (impresión) */}
       <div className="vf-card ticket-container" id="ticket" role="region" aria-label="Factura">
-        {/* Encabezado con logo y datos */}
+        {/* Encabezado */}
         <header className="vf-header">
-          <img src="/Logo.jpeg" alt="Logo de la empresa" className="vf-logo" />
+          <img src="/Logo.jpeg" alt="Logo" className="vf-logo" />
           <h1 className="vf-title">FERRETERÍA EL CAMPESINO</h1>
           <p className="vf-sub">Aldea Mediacuesta – Tel: 57765449 / 34567814</p>
         </header>
@@ -123,12 +114,12 @@ function VerFactura() {
         {/* Meta */}
         <section className="vf-meta" aria-label="Datos de factura">
           <span><strong>Factura:</strong> #{id}</span>
-          <span><strong>Cliente:</strong> {nombre_cliente || "Consumidor final"}</span>
+          <span><strong>Cliente:</strong> {nombre_cliente}</span>
           <span><strong>Creación:</strong> {fechaCreacionTxt}</span>
           <span><strong>Entrega:</strong> {fechaEntregaTxt}</span>
         </section>
 
-        {/* Tabla */}
+        {/* Detalle */}
         <div className="vf-table-wrap">
           <table className="vf-table" aria-label="Detalle de productos">
             <colgroup>
@@ -173,17 +164,17 @@ function VerFactura() {
 
         {/* Totales */}
         <section className="vf-summary" aria-label="Resumen">
-          <p><span>Subtotal:</span> <strong>{q(subtotal)}</strong></p>
-          <p><span>Costo Envío:</span> <strong>{q(costo_envio)}</strong></p>
-          <p><span>Descuento:</span> <strong>{q(descuento_total)}</strong></p>
-          <p className="vf-total" aria-live="polite"><span>Total:</span> <strong>{q(total)}</strong></p>
+          <p>Subtotal: <strong>{q(subtotal)}</strong></p>
+          <p>Costo Envío: <strong>{q(factura.costo_envio)}</strong></p>
+          <p>Descuento: <strong>{q(factura.descuento_total)}</strong></p>
+          <p className="vf-total">TOTAL: {q(total)}</p>
         </section>
 
         {/* Frase */}
         <p className="vf-verse">{VERSE}</p>
       </div>
 
-      {/* Barra de acciones (solo pantalla) */}
+      {/* Acciones (pantalla) */}
       <div className="vf-actions no-print">
         <button className="vf-btn vf-btn-dark" onClick={() => navigate("/facturas")}>
           <FaArrowLeft /> Volver
