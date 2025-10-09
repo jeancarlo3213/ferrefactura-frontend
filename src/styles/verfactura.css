@@ -15,6 +15,8 @@
   --shadow:0 10px 30px rgba(0,0,0,.35);
 }
 
+*{ box-sizing:border-box }
+
 .vf-container{
   min-height:100vh;
   background:
@@ -26,6 +28,15 @@
   align-items:flex-start;
   justify-content:center;
   padding:24px 12px 120px;
+}
+
+/* Loader en pantalla */
+.vf-loader{
+  min-height:60vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
 }
 
 .vf-card{
@@ -69,6 +80,7 @@
 }
 .vf-status label.active{ background:linear-gradient(135deg,var(--brand),var(--brand-2)); color:#fff; }
 
+/* Tabla */
 .vf-table-wrap{ max-height:480px; overflow:auto; border-radius:12px; }
 .vf-table{
   width:100%; border-collapse:separate; border-spacing:0;
@@ -77,6 +89,7 @@
   font-variant-numeric:tabular-nums lining-nums; font-feature-settings:"tnum" 1,"lnum" 1;
 }
 .vf-table thead th{
+  position:sticky; top:0; z-index:1;
   background:color-mix(in oklab, var(--surface) 85%, black);
   color:var(--text); font-weight:900; padding:12px 10px; border-bottom:1px solid var(--border);
 }
@@ -121,50 +134,52 @@
    IMPRESIÓN TÉRMICA – 78 mm
    =========================== */
 @media print{
-  /* 7.8 cm = 78 mm */
+  /* Sugerido para Epson TM con “Receipt 6”: 78 mm de ancho útil */
   @page{ size:78mm auto; margin:0 }
 
-  body{
+  html, body{
     background:#fff !important; color:#000 !important;
     -webkit-print-color-adjust:exact; print-color-adjust:exact;
   }
-  body *{ visibility:hidden !important }
 
-  /* Ticket visible y con márgenes de seguridad (que no corte letras) */
+  /* Ocultar todo menos el ticket */
+  body *{ visibility:hidden !important }
   .ticket-container, .ticket-container *{ visibility:visible !important }
+
+  /* Ticket */
   .ticket-container{
     position:absolute; left:0; top:0;
-    padding:5mm 5mm 4mm 5mm;                 /* margen: izq 5mm */
-    width:calc(78mm - 10mm);                 /* ancho util */
+    padding:5mm 5mm 4mm 5mm;                 /* margen interno seguro */
+    width:calc(78mm - 10mm);                 /* ancho útil */
     background:#fff; color:#000; border:none; box-shadow:none; margin:0;
     font-family:ui-monospace,"Cascadia Mono","SFMono-Regular","Courier New",monospace;
     font-size:12px; line-height:1.28; letter-spacing:0;
   }
 
+  /* Reseteo de estilos pantalla dentro del ticket */
   .vf-card{ background:#fff; border:none; padding:0 }
   .vf-header{ margin:0 0 2mm; text-align:center }
   .vf-logo{ width:22mm; height:22mm; border:0; box-shadow:none; margin:0 auto 1mm; filter:grayscale(1) contrast(130%); }
   .vf-title{ font-size:13px; font-weight:900; margin:0 }
   .vf-sub{ margin:0; font-weight:600 }
 
-  /* Meta en una sola columna para que no salte “a. m.” */
+  /* Meta en una sola columna, sin cortes raros en “a. m.”/“p. m.” */
   .vf-meta{
     grid-template-columns:1fr; gap:1mm; background:#fff; border:none;
     padding:0; margin:2mm 0 2mm; font-size:12px; font-weight:600; white-space:nowrap;
     color:#000 !important;
   }
 
-  .vf-status{ display:none }
+  .vf-status, .vf-actions, .no-print{ display:none !important }
 
   .vf-table-wrap{ max-height:none; overflow:visible }
 
-  /* Tabla alta legibilidad (auto => no recorta) */
+  /* Tabla: alto contraste, sin colores de fondo */
   .vf-table{
     width:100%; border:none; background:#fff;
     border-collapse:collapse; table-layout:auto;
   }
 
-  /* Todo el texto del ticket en NEGRO, sin grises */
   .vf-table th, .vf-table td{ color:#000 !important; }
 
   .vf-table thead th{
@@ -177,7 +192,7 @@
   }
   .vf-row:nth-child(even){ background:#fff !important }
 
-  /* Anchos y alineaciones sin UM */
+  /* Anchos y alineaciones para térmica */
   .col-cant{ width:10% !important; text-align:center !important }
   .col-desc{ width:58% !important; padding-left:3mm !important; white-space:normal !important; word-break:break-word !important; }
   .vf-table thead th.col-desc{ padding-left:3mm !important; }
@@ -185,14 +200,12 @@
   .col-subt{ width:16% !important; text-align:right !important }
 
   /* Totales */
-  .vf-summary{ margin-top:2mm; gap:1mm; font-weight:700 }
-  .vf-summary p{ font-size:12px; white-space:nowrap; color:#000 !important; }
+  .vf-summary{ margin-top:2mm; gap:1mm; font-weight:700; justify-items:end }
+  .vf-summary p{ font-size:12px; white-space:nowrap; color:#000 !important; margin:0 }
   .vf-total{ font-size:14px; font-weight:900; background:#fff; padding:0; color:#000 !important; }
 
   .vf-verse{
     margin-top:3mm; text-align:center; font-style:italic;
     color:#000 !important; font-weight:700;
   }
-
-  .no-print{ display:none !important }
 }

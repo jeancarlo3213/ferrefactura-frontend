@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Spin, Alert } from "antd";
 import { FaArrowLeft, FaPrint } from "react-icons/fa";
@@ -6,7 +6,7 @@ import "../styles/verfactura.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// helper: Q 2 decimales
+// Helper: Formatea a Q con 2 decimales
 const q = (n) => `Q${Number(n || 0).toFixed(2)}`;
 
 function VerFactura() {
@@ -19,6 +19,7 @@ function VerFactura() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
+    let alive = true;
     const fetchFactura = async () => {
       try {
         const res = await fetch(`${API_URL}/facturas/${id}/`, {
@@ -26,15 +27,40 @@ function VerFactura() {
         });
         if (!res.ok) throw new Error("No se pudo obtener la factura.");
         const data = await res.json();
-        setFactura(data);
+        if (alive) setFactura(data);
       } catch (e) {
-        setError(e.message);
+        if (alive) setError(e.message || "Error desconocido");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
     fetchFactura();
+    return () => { alive = false; };
   }, [id, token]);
+
+  const {
+    nombre_cliente,
+    fecha_creacion,
+    fecha_entrega,
+    costo_envio,
+    descuento_total,
+    detalles = [],
+  } = factura || {};
+
+  // Cálculos en memo para evitar recomputar
+  const { subtotal, total } = useMemo(() => {
+    const sub = (detalles || []).reduce(
+      (acc, d) => acc + Number(d.cantidad) * Number(d.precio_unitario),
+      0
+    );
+    const tot = sub + Number(costo_envio || 0) - Number(descuento_total || 0);
+    return { subtotal: sub, total: tot };
+  }, [detalles, costo_envio, descuento_total]);
+
+  const VERSE =
+    "Pon en manos del SEÑOR todas tus obras y tus proyectos se cumplirán. — Proverbios 16:3";
+
+  const handlePrint = () => window.print();
 
   if (loading) {
     return (
@@ -65,43 +91,41 @@ function VerFactura() {
     );
   }
 
-  const {
-    nombre_cliente,
-    fecha_creacion,
-    fecha_entrega,
-    costo_envio,
-    descuento_total,
-    detalles = [],
-  } = factura;
+  // Fechas legibles para GT (evita saltos “a. m.” en ticket usando texto plano)
+  const fechaCreacionTxt = new Date(fecha_creacion).toLocaleString("es-GT", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }).replaceAll(",", "");
 
-  const subtotal = detalles.reduce(
-    (acc, d) => acc + Number(d.cantidad) * Number(d.precio_unitario),
-    0
-  );
-  const total = subtotal + Number(costo_envio || 0) - Number(descuento_total || 0);
-
-  const VERSE =
-    "Pon en manos del SEÑOR todas tus obras y tus proyectos se cumplirán. — Proverbios 16:3";
-
-  const handlePrint = () => window.print();
+  const fechaEntregaTxt = fecha_entrega
+    ? new Date(fecha_entrega).toLocaleDateString("es-GT", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+    : "No especificada";
 
   return (
     <div className="vf-container">
       {/* Tarjeta en pantalla y también base del ticket */}
-      <div className="vf-card ticket-container" id="ticket">
+      <div className="vf-card ticket-container" id="ticket" role="region" aria-label="Factura">
         {/* Encabezado con logo y datos */}
         <header className="vf-header">
-          <img src="/Logo.jpeg" alt="Logo" className="vf-logo" />
+          <img src="/Logo.jpeg" alt="Logo de la empresa" className="vf-logo" />
           <h1 className="vf-title">FERRETERÍA EL CAMPESINO</h1>
           <p className="vf-sub">Aldea Mediacuesta – Tel: 57765449 / 34567814</p>
         </header>
 
         {/* Meta */}
-        <section className="vf-meta">
+        <section className="vf-meta" aria-label="Datos de factura">
           <span><strong>Factura:</strong> #{id}</span>
-          <span><strong>Cliente:</strong> {nombre_cliente}</span>
-          <span><strong>Creación:</strong> {new Date(fecha_creacion).toLocaleString()}</span>
-          <span><strong>Entrega:</strong> {fecha_entrega || "No especificada"}</span>
+          <span><strong>Cliente:</strong> {nombre_cliente || "Consumidor final"}</span>
+          <span><strong>Creación:</strong> {fechaCreacionTxt}</span>
+          <span><strong>Entrega:</strong> {fechaEntregaTxt}</span>
         </section>
 
         {/* Tabla */}
@@ -115,10 +139,10 @@ function VerFactura() {
             </colgroup>
             <thead>
               <tr>
-                <th className="sticky">Cant</th>
-                <th className="sticky">Descripción</th>
-                <th className="sticky">P/U</th>
-                <th className="sticky">Subt</th>
+                <th className="col-cant">Cant</th>
+                <th className="col-desc">Descripción</th>
+                <th className="col-unit">P/U</th>
+                <th className="col-subt">Subt</th>
               </tr>
             </thead>
             <tbody>
@@ -129,32 +153,37 @@ function VerFactura() {
                   </td>
                 </tr>
               ) : (
-                detalles.map((d, idx) => (
-                  <tr className="vf-row" key={idx}>
-                    <td className="vf-num">{d.cantidad}</td>
-                    <td className="vf-desc">{d.producto_nombre}</td>
-                    <td className="vf-num">{q(d.precio_unitario)}</td>
-                    <td className="vf-num">{q(Number(d.cantidad) * Number(d.precio_unitario))}</td>
-                  </tr>
-                ))
+                detalles.map((d, idx) => {
+                  const cant = Number(d.cantidad);
+                  const pu = Number(d.precio_unitario);
+                  const subt = cant * pu;
+                  return (
+                    <tr className="vf-row" key={`${idx}-${d.producto_id || d.producto_nombre}`}>
+                      <td className="vf-num">{cant}</td>
+                      <td className="vf-desc">{d.producto_nombre}</td>
+                      <td className="vf-num">{q(pu)}</td>
+                      <td className="vf-num">{q(subt)}</td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
         {/* Totales */}
-        <section className="vf-summary">
+        <section className="vf-summary" aria-label="Resumen">
           <p><span>Subtotal:</span> <strong>{q(subtotal)}</strong></p>
-          <p><span>Costo Envío (Q):</span> <strong>{q(costo_envio)}</strong></p>
+          <p><span>Costo Envío:</span> <strong>{q(costo_envio)}</strong></p>
           <p><span>Descuento:</span> <strong>{q(descuento_total)}</strong></p>
-          <p className="vf-total"><span>Total:</span> <strong>{q(total)}</strong></p>
+          <p className="vf-total" aria-live="polite"><span>Total:</span> <strong>{q(total)}</strong></p>
         </section>
 
         {/* Frase */}
         <p className="vf-verse">{VERSE}</p>
       </div>
 
-      {/* Barra de acciones (pantalla) */}
+      {/* Barra de acciones (solo pantalla) */}
       <div className="vf-actions no-print">
         <button className="vf-btn vf-btn-dark" onClick={() => navigate("/facturas")}>
           <FaArrowLeft /> Volver
